@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace MoneySaver.Api.Data.Migrations
 {
-    public partial class Initial_Migration : Migration
+    public partial class Initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -13,9 +13,10 @@ namespace MoneySaver.Api.Data.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Type = table.Column<int>(nullable: false),
                     CreatedOn = table.Column<DateTime>(nullable: false),
-                    ModifiedOn = table.Column<DateTime>(nullable: false)
+                    ModifiedOn = table.Column<DateTime>(nullable: false),
+                    Type = table.Column<int>(nullable: false),
+                    LimitAmount = table.Column<double>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -36,23 +37,27 @@ namespace MoneySaver.Api.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "BudgetTransactionCategory",
+                name: "BudgetItems",
                 columns: table => new
                 {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     BudgetId = table.Column<int>(nullable: false),
-                    TransactionCategoryId = table.Column<int>(nullable: false)
+                    TransactionCategoryId = table.Column<int>(nullable: false),
+                    LimitAmount = table.Column<double>(nullable: false),
+                    SpentAmount = table.Column<double>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BudgetTransactionCategory", x => new { x.BudgetId, x.TransactionCategoryId });
+                    table.PrimaryKey("PK_BudgetItems", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_BudgetTransactionCategory_Budgets_BudgetId",
+                        name: "FK_BudgetItems_Budgets_BudgetId",
                         column: x => x.BudgetId,
                         principalTable: "Budgets",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_BudgetTransactionCategory_TransactionCategories_TransactionCategoryId",
+                        name: "FK_BudgetItems_TransactionCategories_TransactionCategoryId",
                         column: x => x.TransactionCategoryId,
                         principalTable: "TransactionCategories",
                         principalColumn: "Id",
@@ -66,6 +71,7 @@ namespace MoneySaver.Api.Data.Migrations
                     Id = table.Column<Guid>(nullable: false),
                     CreateOn = table.Column<DateTime>(nullable: false),
                     ModifyOn = table.Column<DateTime>(nullable: false),
+                    TransactionDate = table.Column<DateTime>(nullable: false),
                     UserId = table.Column<int>(nullable: false),
                     TransactionCategoryId = table.Column<int>(nullable: false),
                     Amount = table.Column<double>(nullable: false),
@@ -94,12 +100,17 @@ namespace MoneySaver.Api.Data.Migrations
 
             migrationBuilder.InsertData(
                 table: "Transactions",
-                columns: new[] { "Id", "AdditionalNote", "Amount", "CreateOn", "ModifyOn", "TransactionCategoryId", "UserId" },
-                values: new object[] { new Guid("3fdbbfd3-a9bf-4de7-90e2-d9db8a823ec3"), "Тест бележка", 3.3999999999999999, new DateTime(2020, 11, 6, 18, 56, 50, 221, DateTimeKind.Utc).AddTicks(8815), new DateTime(2020, 11, 6, 18, 56, 50, 221, DateTimeKind.Utc).AddTicks(9597), 1, 1 });
+                columns: new[] { "Id", "AdditionalNote", "Amount", "CreateOn", "ModifyOn", "TransactionCategoryId", "TransactionDate", "UserId" },
+                values: new object[] { new Guid("6a0389d5-df64-4cd3-8135-2be59455231b"), "Тест бележка", 3.3999999999999999, new DateTime(2020, 11, 7, 15, 56, 18, 594, DateTimeKind.Utc).AddTicks(8176), new DateTime(2020, 11, 7, 15, 56, 18, 594, DateTimeKind.Utc).AddTicks(8680), 1, new DateTime(2020, 11, 7, 15, 56, 18, 594, DateTimeKind.Utc).AddTicks(9132), 1 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_BudgetTransactionCategory_TransactionCategoryId",
-                table: "BudgetTransactionCategory",
+                name: "IX_BudgetItems_BudgetId",
+                table: "BudgetItems",
+                column: "BudgetId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BudgetItems_TransactionCategoryId",
+                table: "BudgetItems",
                 column: "TransactionCategoryId");
 
             migrationBuilder.CreateIndex(
@@ -111,7 +122,7 @@ namespace MoneySaver.Api.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "BudgetTransactionCategory");
+                name: "BudgetItems");
 
             migrationBuilder.DropTable(
                 name: "Transactions");

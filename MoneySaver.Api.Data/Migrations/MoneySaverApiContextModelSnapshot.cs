@@ -29,6 +29,9 @@ namespace MoneySaver.Api.Data.Migrations
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime2");
 
+                    b.Property<double>("LimitAmount")
+                        .HasColumnType("float");
+
                     b.Property<DateTime>("ModifiedOn")
                         .HasColumnType("datetime2");
 
@@ -40,19 +43,33 @@ namespace MoneySaver.Api.Data.Migrations
                     b.ToTable("Budgets");
                 });
 
-            modelBuilder.Entity("MoneySaver.Api.Data.BudgetTransactionCategory", b =>
+            modelBuilder.Entity("MoneySaver.Api.Data.BudgetItem", b =>
                 {
+                    b.Property<int>("BudgetItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnName("Id")
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
                     b.Property<int>("BudgetId")
                         .HasColumnType("int");
+
+                    b.Property<double>("LimitAmount")
+                        .HasColumnType("float");
+
+                    b.Property<double>("SpentAmount")
+                        .HasColumnType("float");
 
                     b.Property<int>("TransactionCategoryId")
                         .HasColumnType("int");
 
-                    b.HasKey("BudgetId", "TransactionCategoryId");
+                    b.HasKey("BudgetItemId");
+
+                    b.HasIndex("BudgetId");
 
                     b.HasIndex("TransactionCategoryId");
 
-                    b.ToTable("BudgetTransactionCategory");
+                    b.ToTable("BudgetItems");
                 });
 
             modelBuilder.Entity("MoneySaver.Api.Data.Transaction", b =>
@@ -91,13 +108,13 @@ namespace MoneySaver.Api.Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("39c259b0-a9a9-44ce-b886-b52522360b82"),
+                            Id = new Guid("6a0389d5-df64-4cd3-8135-2be59455231b"),
                             AdditionalNote = "Тест бележка",
                             Amount = 3.3999999999999999,
-                            CreateOn = new DateTime(2020, 11, 6, 19, 35, 27, 470, DateTimeKind.Utc).AddTicks(5842),
-                            ModifyOn = new DateTime(2020, 11, 6, 19, 35, 27, 470, DateTimeKind.Utc).AddTicks(6317),
+                            CreateOn = new DateTime(2020, 11, 7, 15, 56, 18, 594, DateTimeKind.Utc).AddTicks(8176),
+                            ModifyOn = new DateTime(2020, 11, 7, 15, 56, 18, 594, DateTimeKind.Utc).AddTicks(8680),
                             TransactionCategoryId = 1,
-                            TransactionDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            TransactionDate = new DateTime(2020, 11, 7, 15, 56, 18, 594, DateTimeKind.Utc).AddTicks(9132),
                             UserId = 1
                         });
                 });
@@ -106,6 +123,7 @@ namespace MoneySaver.Api.Data.Migrations
                 {
                     b.Property<int>("TransactionCategoryId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnName("Id")
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
@@ -129,10 +147,10 @@ namespace MoneySaver.Api.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("MoneySaver.Api.Data.BudgetTransactionCategory", b =>
+            modelBuilder.Entity("MoneySaver.Api.Data.BudgetItem", b =>
                 {
                     b.HasOne("MoneySaver.Api.Data.Budget", "Budget")
-                        .WithMany("BudgetTransactionCategories")
+                        .WithMany("BudgetItems")
                         .HasForeignKey("BudgetId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

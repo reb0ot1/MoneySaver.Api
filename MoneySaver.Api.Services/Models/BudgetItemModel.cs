@@ -1,18 +1,19 @@
-﻿using MoneySaver.Api.Data;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace MoneySaver.Api.Services.Models
 {
-    public class BudgetModel
+    public class BudgetItemModel
     {
         public int Id { get; set; }
 
-        public BudgetType Type { get; set; }
+        public int BudgetId { get; set; }
 
-        public IList<BudgetItemModel> BudgetItems { get; set; }
+        public int TransactionCategoryId { get; set; }
 
         public double LimitAmount { get; set; }
+
+        public double SpentAmount { get; set; }
     }
 }
