@@ -23,5 +23,7 @@ namespace MoneySaver.Api.Data
         public double Amount { get; set; }
 
         public string AdditionalNote { get; set; }
+
+        public bool IsDeleted { get; set; }
     }
 }

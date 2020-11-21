@@ -31,7 +31,8 @@ namespace MoneySaver.Api.Data
                ModifyOn = DateTime.UtcNow,
                TransactionDate = DateTime.UtcNow,
                TransactionCategoryId = 1,
-               UserId = 1
+               UserId = 1,
+               IsDeleted = false
             });
         }
     }

@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using MoneySaver.Api.Data;
-using MoneySaver.Api.Data.Repositories;
+using MoneySaver.Api.Services.Contracts;
 using MoneySaver.Api.Services.Models;
+using MoneySaver.Api.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 
 namespace MoneySaver.Api.Controllers
 {
@@ -15,12 +16,13 @@ namespace MoneySaver.Api.Controllers
     public class TransactionController : Controller
     {
         private ILogger<TransactionController> logger;
-        private IRepository<Transaction> transactionRepository;
+        private ITransactionService transactionService;
 
-        public TransactionController(ILogger<TransactionController> logger, IRepository<Transaction> repository)
+
+        public TransactionController(ILogger<TransactionController> logger, ITransactionService transactionService)
         {
             this.logger = logger;
-            this.transactionRepository = repository;
+            this.transactionService = transactionService;
             //TODO: Add endpoint for getting all transactions
             //TODO: Add endpoint for getting transaction by id
             //TODO: Add endpoint for updating transation by id;
@@ -32,19 +34,31 @@ namespace MoneySaver.Api.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
-            var result = this.transactionRepository.GetAll().ToList();
+            return this.Ok(this.transactionService.GetAllTransactions());
+        }
 
-            return this.Ok(result
-                .Select(trm => 
-                    new TransactionModel 
-                    {
-                        Id = trm.Id.ToString(),
-                        TransactionCategoryId = trm.TransactionCategoryId,
-                        AdditionalNote = trm.AdditionalNote, 
-                        Amount = trm.Amount,
-                        TransactionDate = trm.TransactionDate
-                    })
-                );
+        [HttpGet("{transactionId}")]
+        public IActionResult GetTransaction(Guid transactionId)
+        {
+            return this.Ok(this.transactionService.GetTransaction(transactionId));
+        }
+
+        [HttpPut]
+        public IActionResult UpdateTransaction(TransactionModel transactionModel)
+        {
+            return this.Ok(this.transactionService.UpdateTransaction(transactionModel));
+        }
+
+        [HttpPost]
+        public IActionResult CreateTransaction(TransactionModel transactionModel)
+        {
+            return this.Ok(this.transactionService.CreateTransaction(transactionModel));
+        }
+
+        [HttpDelete]
+        public void RemoveTransaction(Guid transactionId)
+        {
+            this.transactionService.RemoveTransaction(transactionId);
         }
     }
 }
