@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MoneySaver.Api.Data;
 
 namespace MoneySaver.Api.Data.Migrations
 {
     [DbContext(typeof(MoneySaverApiContext))]
-    partial class MoneySaverApiContextModelSnapshot : ModelSnapshot
+    [Migration("20201115141236_added_isDeleted_property_to_transactions")]
+    partial class added_isDeleted_property_to_transactions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,12 +30,6 @@ namespace MoneySaver.Api.Data.Migrations
 
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedOnUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
 
                     b.Property<double>("LimitAmount")
                         .HasColumnType("float");
@@ -59,12 +55,6 @@ namespace MoneySaver.Api.Data.Migrations
 
                     b.Property<int>("BudgetId")
                         .HasColumnType("int");
-
-                    b.Property<DateTime?>("DeletedOnUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
 
                     b.Property<double>("LimitAmount")
                         .HasColumnType("float");
@@ -99,9 +89,6 @@ namespace MoneySaver.Api.Data.Migrations
                     b.Property<DateTime>("CreateOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("DeletedOnUtc")
-                        .HasColumnType("datetime2");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -126,14 +113,14 @@ namespace MoneySaver.Api.Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("95005f25-0d96-4406-bb11-fd6df59edddd"),
+                            Id = new Guid("a77645ba-1128-4ef6-8f47-122d0a255ed4"),
                             AdditionalNote = "Тест бележка",
                             Amount = 3.3999999999999999,
-                            CreateOn = new DateTime(2020, 11, 22, 12, 36, 31, 861, DateTimeKind.Utc).AddTicks(6497),
+                            CreateOn = new DateTime(2020, 11, 15, 14, 12, 36, 82, DateTimeKind.Utc).AddTicks(4736),
                             IsDeleted = false,
-                            ModifyOn = new DateTime(2020, 11, 22, 12, 36, 31, 861, DateTimeKind.Utc).AddTicks(7121),
+                            ModifyOn = new DateTime(2020, 11, 15, 14, 12, 36, 82, DateTimeKind.Utc).AddTicks(5071),
                             TransactionCategoryId = 1,
-                            TransactionDate = new DateTime(2020, 11, 22, 12, 36, 31, 861, DateTimeKind.Utc).AddTicks(7641),
+                            TransactionDate = new DateTime(2020, 11, 15, 14, 12, 36, 82, DateTimeKind.Utc).AddTicks(5370),
                             UserId = 1
                         });
                 });
@@ -146,21 +133,10 @@ namespace MoneySaver.Api.Data.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<DateTime?>("DeletedOnUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("TransactionCategoryId1")
-                        .HasColumnType("int");
-
                     b.HasKey("TransactionCategoryId");
-
-                    b.HasIndex("TransactionCategoryId1");
 
                     b.ToTable("TransactionCategories");
 
@@ -168,13 +144,11 @@ namespace MoneySaver.Api.Data.Migrations
                         new
                         {
                             TransactionCategoryId = 1,
-                            IsDeleted = false,
                             Name = "Food"
                         },
                         new
                         {
                             TransactionCategoryId = 2,
-                            IsDeleted = false,
                             Name = "Sport"
                         });
                 });
@@ -201,13 +175,6 @@ namespace MoneySaver.Api.Data.Migrations
                         .HasForeignKey("TransactionCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("MoneySaver.Api.Data.TransactionCategory", b =>
-                {
-                    b.HasOne("MoneySaver.Api.Data.TransactionCategory", null)
-                        .WithMany("Children")
-                        .HasForeignKey("TransactionCategoryId1");
                 });
 #pragma warning restore 612, 618
         }

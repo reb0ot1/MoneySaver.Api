@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MoneySaver.Api.Data;
 
 namespace MoneySaver.Api.Data.Migrations
 {
     [DbContext(typeof(MoneySaverApiContext))]
-    partial class MoneySaverApiContextModelSnapshot : ModelSnapshot
+    [Migration("20201122101427_added_isDeleted_and_deletedOn_properties")]
+    partial class added_isDeleted_and_deletedOn_properties
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -126,14 +128,14 @@ namespace MoneySaver.Api.Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("95005f25-0d96-4406-bb11-fd6df59edddd"),
+                            Id = new Guid("1621823d-be10-4b50-a112-dedf871eab5e"),
                             AdditionalNote = "Тест бележка",
                             Amount = 3.3999999999999999,
-                            CreateOn = new DateTime(2020, 11, 22, 12, 36, 31, 861, DateTimeKind.Utc).AddTicks(6497),
+                            CreateOn = new DateTime(2020, 11, 22, 10, 14, 27, 287, DateTimeKind.Utc).AddTicks(9141),
                             IsDeleted = false,
-                            ModifyOn = new DateTime(2020, 11, 22, 12, 36, 31, 861, DateTimeKind.Utc).AddTicks(7121),
+                            ModifyOn = new DateTime(2020, 11, 22, 10, 14, 27, 287, DateTimeKind.Utc).AddTicks(9696),
                             TransactionCategoryId = 1,
-                            TransactionDate = new DateTime(2020, 11, 22, 12, 36, 31, 861, DateTimeKind.Utc).AddTicks(7641),
+                            TransactionDate = new DateTime(2020, 11, 22, 10, 14, 27, 288, DateTimeKind.Utc).AddTicks(190),
                             UserId = 1
                         });
                 });
@@ -146,21 +148,10 @@ namespace MoneySaver.Api.Data.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<DateTime?>("DeletedOnUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("TransactionCategoryId1")
-                        .HasColumnType("int");
-
                     b.HasKey("TransactionCategoryId");
-
-                    b.HasIndex("TransactionCategoryId1");
 
                     b.ToTable("TransactionCategories");
 
@@ -168,13 +159,11 @@ namespace MoneySaver.Api.Data.Migrations
                         new
                         {
                             TransactionCategoryId = 1,
-                            IsDeleted = false,
                             Name = "Food"
                         },
                         new
                         {
                             TransactionCategoryId = 2,
-                            IsDeleted = false,
                             Name = "Sport"
                         });
                 });
@@ -201,13 +190,6 @@ namespace MoneySaver.Api.Data.Migrations
                         .HasForeignKey("TransactionCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("MoneySaver.Api.Data.TransactionCategory", b =>
-                {
-                    b.HasOne("MoneySaver.Api.Data.TransactionCategory", null)
-                        .WithMany("Children")
-                        .HasForeignKey("TransactionCategoryId1");
                 });
 #pragma warning restore 612, 618
         }

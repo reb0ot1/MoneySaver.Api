@@ -16,5 +16,9 @@ namespace MoneySaver.Api.Data
         public IList<BudgetItem> BudgetItems { get; set; }
 
         public double LimitAmount { get; set; }
+
+        public bool IsDeleted { get; set; }
+
+        public DateTime? DeletedOnUtc { get; set; }
     }
 }

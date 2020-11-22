@@ -21,5 +21,9 @@ namespace MoneySaver.Api.Data
         public double LimitAmount { get; set; }
 
         public double SpentAmount { get; set; }
+
+        public bool IsDeleted { get; set; }
+
+        public DateTime? DeletedOnUtc { get; set; }
     }
 }
