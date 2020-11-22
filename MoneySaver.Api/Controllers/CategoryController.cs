@@ -15,11 +15,6 @@ namespace MoneySaver.Api.Controllers
     [ApiController]
     public class CategoryController : Controller
     {
-        //TODO: Endpoint for getting all categories
-        //TODO: Endpoint for getting category by id
-        //TODO: Endpoint for Update category by id
-        //TODO: Endpoint for Add category
-        //TODO: Endpoint for delete category???
         private ILogger<TransactionController> logger;
         private ITransactionCategoryService categoryService;
 

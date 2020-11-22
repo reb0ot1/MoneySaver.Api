@@ -32,6 +32,7 @@ namespace MoneySaver.Api.Services.Implementation
         public List<TransactionCategoryModel> GetAllCategories()
         {
             List<TransactionCategoryModel> transactionCategoryModels = categoryRepository.GetAll().Select(m => mapper.Map<TransactionCategoryModel>(m)).ToList();
+
             return transactionCategoryModels;
         }
 

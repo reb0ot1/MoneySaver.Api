@@ -16,6 +16,8 @@ namespace MoneySaver.Api
             CreateMap<TransactionModel, Transaction>();
             CreateMap<TransactionCategory, TransactionCategoryModel>();
             CreateMap<TransactionCategoryModel, TransactionCategory>();
+            CreateMap<Budget, BudgetModel>();
+            CreateMap<BudgetModel, Budget>();
         }
     }
 }
