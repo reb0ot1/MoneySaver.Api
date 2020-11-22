@@ -11,7 +11,7 @@ namespace MoneySaver.Api.Services.Contracts
         List<TransactionModel> GetAllTransactions();
         TransactionModel GetTransaction(Guid id);
         TransactionModel UpdateTransaction(TransactionModel transaction);
-        TransactionModel CreateTransaction(TransactionModel transactionMode);
+        TransactionModel CreateTransaction(TransactionModel transactionModel);
         void RemoveTransaction(Guid id);
 
 

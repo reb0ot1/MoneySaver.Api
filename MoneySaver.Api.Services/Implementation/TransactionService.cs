@@ -32,7 +32,7 @@ namespace MoneySaver.Api.Services.Implementation
 
         public List<TransactionModel> GetAllTransactions()
         {
-            var transactionModels = this.transactionRepository.GetAll().Select(m => mapper.Map<TransactionModel>(m)).ToList();
+            List<TransactionModel> transactionModels = this.transactionRepository.GetAll().Select(m => mapper.Map<TransactionModel>(m)).ToList();
 
             return transactionModels;
         }
@@ -49,7 +49,7 @@ namespace MoneySaver.Api.Services.Implementation
         {
             
             Transaction transaction = mapper.Map<Transaction>(transactionModel);
-             this.transactionRepository.UpdateAsync(transaction);
+            this.transactionRepository.UpdateAsync(transaction);
 
             return transactionModel;
         }
