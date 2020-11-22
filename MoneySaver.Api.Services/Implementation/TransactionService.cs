@@ -32,14 +32,7 @@ namespace MoneySaver.Api.Services.Implementation
 
         public List<TransactionModel> GetAllTransactions()
         {
-            var transactions = this.transactionRepository.GetAll().ToList();
-            List<TransactionModel> transactionModels = new List<TransactionModel>();
-
-            for (int i = 0; i < transactions.Count; i++)
-            {
-                TransactionModel transactionModel = mapper.Map<TransactionModel>(transactions[i]);
-                transactionModels.Add(transactionModel);
-            }
+            var transactionModels = this.transactionRepository.GetAll().Select(m => mapper.Map<TransactionModel>(m)).ToList();
 
             return transactionModels;
         }
@@ -65,6 +58,7 @@ namespace MoneySaver.Api.Services.Implementation
         {
             Transaction transaction = this.transactionRepository.GetAll().FirstOrDefault(t => t.Id == id);
             transaction.IsDeleted = true;
+            transaction.DeletedOnUtc = DateTime.UtcNow;
             this.transactionRepository.RemoveAsync(transaction);
         }
 

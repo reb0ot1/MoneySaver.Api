@@ -25,5 +25,7 @@ namespace MoneySaver.Api.Data
         public string AdditionalNote { get; set; }
 
         public bool IsDeleted { get; set; }
+
+        public DateTime? DeletedOnUtc { get; set; }
     }
 }
