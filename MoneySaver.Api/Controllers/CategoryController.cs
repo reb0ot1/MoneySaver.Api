@@ -29,7 +29,7 @@ namespace MoneySaver.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public IActionResult GetAll()
         {
             return this.Ok(this.categoryService.GetAllCategories());
         }
