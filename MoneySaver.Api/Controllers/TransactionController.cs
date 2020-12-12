@@ -1,16 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MoneySaver.Api.Services.Contracts;
 using MoneySaver.Api.Services.Models;
-using MoneySaver.Api.Data;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
 
 namespace MoneySaver.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class TransactionController : Controller
@@ -23,12 +20,6 @@ namespace MoneySaver.Api.Controllers
         {
             this.logger = logger;
             this.transactionService = transactionService;
-            //TODO: Add endpoint for getting all transactions
-            //TODO: Add endpoint for getting transaction by id
-            //TODO: Add endpoint for updating transation by id;
-            //TODO: Add endpoing for adding transaction
-            //TODO: Add endpoint for deleting transaction
-
         }
 
         [HttpGet]
