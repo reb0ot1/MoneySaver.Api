@@ -31,7 +31,6 @@ namespace MoneySaver.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-<<<<<<< HEAD
             return this.Ok(this.categoryService.GetAllCategories());
         }
 
@@ -57,20 +56,6 @@ namespace MoneySaver.Api.Controllers
         public void RemoveTransaction(int transactionCategoryId)
         {
             this.categoryService.RemoveCategory(transactionCategoryId);
-=======
-            var result = await this.categoryRepository
-                .GetAll()
-                .ToListAsync();
-
-            var @return = result.Select(ct =>
-                    new TransactionCategoryModel
-                    {
-                        TransactionCategoryId = ct.TransactionCategoryId,
-                        Name = ct.Name
-                    }).ToList();
-
-            return this.Ok(@return);
->>>>>>> Made change in the transaction category model and add identity authority
         }
     }
 }
