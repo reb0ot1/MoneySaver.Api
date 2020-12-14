@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using MoneySaver.Api.Data;
 using MoneySaver.Api.Data.Repositories;
 using MoneySaver.Api.Services.Contracts;
@@ -7,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MoneySaver.Api.Services.Implementation
 {
@@ -21,42 +23,43 @@ namespace MoneySaver.Api.Services.Implementation
             this.mapper = mapper;
         }
 
-        public TransactionModel CreateTransaction(TransactionModel transactionModel)
+        public async Task<TransactionModel> CreateTransactionAsync(TransactionModel transactionModel)
         {
-
             Transaction transaction = mapper.Map<Transaction>(transactionModel);
-            this.transactionRepository.AddAsync(transaction);
+            await this.transactionRepository.AddAsync(transaction);
 
             return transactionModel;
         }
 
-        public List<TransactionModel> GetAllTransactions()
+        public async Task<IEnumerable<TransactionModel>> GetAllTransactionsAsync()
         {
-            List<TransactionModel> transactionModels = this.transactionRepository.GetAll().Select(m => mapper.Map<TransactionModel>(m)).ToList();
+            List<TransactionModel> transactionModels = await this.transactionRepository.GetAll().Select(m => mapper.Map<TransactionModel>(m)).ToListAsync();
 
             return transactionModels;
         }
 
-        public TransactionModel GetTransaction(Guid id)
+        public async Task<TransactionModel> GetTransactionAsync(Guid id)
         {
-            Transaction transaction = this.transactionRepository.GetAll().FirstOrDefault(t => t.Id == id);
+            Transaction transaction = await this.transactionRepository.GetAll().FirstOrDefaultAsync(t => t.Id == id);
             TransactionModel transactionModel = mapper.Map<TransactionModel>(transaction);
 
             return transactionModel;
         }
 
-        public TransactionModel UpdateTransaction(TransactionModel transactionModel)
+        public async Task<TransactionModel> UpdateTransactionAsync(TransactionModel transactionModel)
         {
-            
             Transaction transaction = mapper.Map<Transaction>(transactionModel);
-            this.transactionRepository.UpdateAsync(transaction);
+            await this.transactionRepository.UpdateAsync(transaction);
 
             return transactionModel;
         }
 
-        public void RemoveTransaction(Guid id)
+        public async Task RemoveTransactionAsync(Guid id)
         {
-            Transaction transaction = this.transactionRepository.GetAll().FirstOrDefault(t => t.Id == id);
+            Transaction transaction = await this.transactionRepository
+                .GetAll()
+                .FirstOrDefaultAsync(t => t.Id == id);
+
             transaction.IsDeleted = true;
             transaction.DeletedOnUtc = DateTime.UtcNow;
             this.transactionRepository.RemoveAsync(transaction);

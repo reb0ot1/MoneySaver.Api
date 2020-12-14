@@ -29,6 +29,8 @@ namespace MoneySaver.Api
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<ITransactionService, TransactionService>();
+            services.AddScoped<ITransactionCategoryService, TransactionCategoryService>();
+            services.AddScoped<IBudgetService, BudgetService>();
             services.AddControllers();
             services.AddAutoMapper(typeof(Startup));
             services.AddCors(options =>

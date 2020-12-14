@@ -8,13 +8,13 @@ namespace MoneySaver.Api.Data
     {
         public Guid Id { get; set; }
 
-        public DateTime CreateOn { get; set; }
+        public DateTime CreateOn { get; set; } = DateTime.UtcNow;
 
-        public DateTime ModifyOn { get; set; }
+        public DateTime ModifyOn { get; set; } = DateTime.UtcNow;
 
         public DateTime TransactionDate { get; set; }
 
-        public int UserId { get; set; }
+        public string UserId { get; set; }
 
         public int TransactionCategoryId { get; set; }
 

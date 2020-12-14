@@ -9,8 +9,9 @@ namespace MoneySaver.Api.Data
         [Column("Id")]
         public int TransactionCategoryId { get; set; }
         public string Name { get; set; }
-        public IEnumerable<TransactionCategory> Children { get; set; } = new List<TransactionCategory>();
+        public int? ParentId { get; set; }
         public bool IsDeleted { get; set; }
         public DateTime? DeletedOnUtc { get; set; }
+        public string UserId { get; set; }
     } 
 }

@@ -2,18 +2,17 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using System.Transactions;
 
 namespace MoneySaver.Api.Services.Contracts
 {
     public interface ITransactionService
     {
-        List<TransactionModel> GetAllTransactions();
-        TransactionModel GetTransaction(Guid id);
-        TransactionModel UpdateTransaction(TransactionModel transaction);
-        TransactionModel CreateTransaction(TransactionModel transactionModel);
-        void RemoveTransaction(Guid id);
-
-
+        Task<IEnumerable<TransactionModel>> GetAllTransactionsAsync();
+        Task<TransactionModel> GetTransactionAsync(Guid id);
+        Task<TransactionModel> UpdateTransactionAsync(TransactionModel transaction);
+        Task<TransactionModel> CreateTransactionAsync(TransactionModel transactionModel);
+        Task RemoveTransactionAsync(Guid id);
     }
 }

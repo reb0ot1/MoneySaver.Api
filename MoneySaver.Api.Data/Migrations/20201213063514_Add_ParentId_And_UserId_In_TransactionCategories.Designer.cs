@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MoneySaver.Api.Data;
 
 namespace MoneySaver.Api.Data.Migrations
 {
     [DbContext(typeof(MoneySaverApiContext))]
-    partial class MoneySaverApiContextModelSnapshot : ModelSnapshot
+    [Migration("20201213063514_Add_ParentId_And_UserId_In_TransactionCategories")]
+    partial class Add_ParentId_And_UserId_In_TransactionCategories
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,9 +45,6 @@ namespace MoneySaver.Api.Data.Migrations
 
                     b.Property<int>("Type")
                         .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -117,14 +116,28 @@ namespace MoneySaver.Api.Data.Migrations
                     b.Property<DateTime>("TransactionDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("TransactionCategoryId");
 
                     b.ToTable("Transactions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("d6f2349d-ad83-4463-8566-9cdb4805c47f"),
+                            AdditionalNote = "Тест бележка",
+                            Amount = 3.3999999999999999,
+                            CreateOn = new DateTime(2020, 12, 13, 6, 35, 14, 26, DateTimeKind.Utc).AddTicks(1945),
+                            IsDeleted = false,
+                            ModifyOn = new DateTime(2020, 12, 13, 6, 35, 14, 26, DateTimeKind.Utc).AddTicks(3131),
+                            TransactionCategoryId = 1,
+                            TransactionDate = new DateTime(2020, 12, 13, 6, 35, 14, 26, DateTimeKind.Utc).AddTicks(4062),
+                            UserId = 1
+                        });
                 });
 
             modelBuilder.Entity("MoneySaver.Api.Data.TransactionCategory", b =>
