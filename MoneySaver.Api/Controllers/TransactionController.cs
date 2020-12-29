@@ -16,7 +16,6 @@ namespace MoneySaver.Api.Controllers
         private ILogger<TransactionController> logger;
         private ITransactionService transactionService;
 
-
         public TransactionController(ILogger<TransactionController> logger, ITransactionService transactionService)
         {
             this.logger = logger;

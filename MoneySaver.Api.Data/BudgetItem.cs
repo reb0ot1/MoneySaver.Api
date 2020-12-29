@@ -10,20 +10,14 @@ namespace MoneySaver.Api.Data
         [Column("Id")]
         public int BudgetItemId { get; set; }
 
-        public int BudgetId { get; set; }
-
-        public Budget Budget { get; set; }
-
         public int TransactionCategoryId { get; set; }
 
-        public TransactionCategory TransactionCategory { get; set; }
-
         public double LimitAmount { get; set; }
-
-        public double SpentAmount { get; set; }
 
         public bool IsDeleted { get; set; }
 
         public DateTime? DeletedOnUtc { get; set; }
+
+        public string UserId { get; set; }
     }
 }

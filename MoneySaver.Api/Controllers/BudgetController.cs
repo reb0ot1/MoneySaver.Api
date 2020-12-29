@@ -25,6 +25,14 @@ namespace MoneySaver.Api.Controllers
             this.budgetService = budgetService;
         }
 
+        [HttpGet("items")]
+        public async Task<IActionResult> GetBudgetItemsAsync()
+        {
+            var result = await this.budgetService.GetBudgetItems(Services.Models.Enums.BudgetType.Monthly);
+
+            return this.Ok(result);
+        }
+
         [HttpGet]
         public IActionResult GetAll()
         {

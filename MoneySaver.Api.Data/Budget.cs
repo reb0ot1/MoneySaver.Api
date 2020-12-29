@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace MoneySaver.Api.Data
 {
@@ -12,8 +10,6 @@ namespace MoneySaver.Api.Data
         public DateTime ModifiedOn { get; set; }
 
         public BudgetType Type { get; set; }
-
-        public IList<BudgetItem> BudgetItems { get; set; }
 
         public double LimitAmount { get; set; }
 
