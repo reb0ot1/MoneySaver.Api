@@ -29,9 +29,12 @@ namespace MoneySaver.Api.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            return this.Ok(this.categoryService.GetAllCategories());
+            IEnumerable<TransactionCategoryModel> result
+                = await this.categoryService.GetAllCategoriesAsync();
+
+            return this.Ok(result);
         }
 
         [HttpGet("{transactionCategoryId}")]

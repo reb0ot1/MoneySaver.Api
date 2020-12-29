@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using MoneySaver.Api.Services.Contracts;
 using MoneySaver.Api.Services.Models;
 using System;
+using System.Threading.Tasks;
 
 namespace MoneySaver.Api.Controllers
 {
@@ -15,7 +16,6 @@ namespace MoneySaver.Api.Controllers
         private ILogger<TransactionController> logger;
         private ITransactionService transactionService;
 
-
         public TransactionController(ILogger<TransactionController> logger, ITransactionService transactionService)
         {
             this.logger = logger;
@@ -23,33 +23,38 @@ namespace MoneySaver.Api.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            return this.Ok(this.transactionService.GetAllTransactions());
+            return this.Ok(await this.transactionService.GetAllTransactionsAsync());
         }
 
         [HttpGet("{transactionId}")]
-        public IActionResult GetTransaction(Guid transactionId)
+        public async Task<IActionResult> GetTransaction(Guid transactionId)
         {
-            return this.Ok(this.transactionService.GetTransaction(transactionId));
+            TransactionModel result = await this.transactionService.GetTransactionAsync(transactionId);
+            return this.Ok(result);
         }
 
         [HttpPut]
-        public IActionResult UpdateTransaction(TransactionModel transactionModel)
+        public async Task<IActionResult> UpdateTransaction(TransactionModel transactionModel)
         {
-            return this.Ok(this.transactionService.UpdateTransaction(transactionModel));
+            var result = await this.transactionService.UpdateTransactionAsync(transactionModel);
+            return this.Ok(result);
         }
 
         [HttpPost]
-        public IActionResult CreateTransaction(TransactionModel transactionModel)
+        public async Task<IActionResult> CreateTransaction(TransactionModel transactionModel)
         {
-            return this.Ok(this.transactionService.CreateTransaction(transactionModel));
+            var result = await this.transactionService.CreateTransactionAsync(transactionModel);
+            return this.Ok(result);
         }
 
         [HttpDelete]
-        public void RemoveTransaction(Guid transactionId)
+        public async Task<IActionResult> RemoveTransaction(Guid transactionId)
         {
-            this.transactionService.RemoveTransaction(transactionId);
+            await this.transactionService.RemoveTransactionAsync(transactionId);
+
+            return this.Ok();
         }
     }
 }

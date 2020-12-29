@@ -7,9 +7,11 @@ namespace MoneySaver.Api.Services.Models
     public class TransactionCategoryModel
     {
         public int TransactionCategoryId { get; set; }
+
         public string Name { get; set; }
 
-        public IEnumerable<TransactionCategoryModel> Children { get; set; } = new List<TransactionCategoryModel>();
+        public IEnumerable<TransactionCategoryModel> Children { get; set; }
+            = new List<TransactionCategoryModel>();
 
     }
 }

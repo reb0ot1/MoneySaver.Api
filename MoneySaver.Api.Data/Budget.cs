@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace MoneySaver.Api.Data
 {
@@ -13,12 +11,12 @@ namespace MoneySaver.Api.Data
 
         public BudgetType Type { get; set; }
 
-        public IList<BudgetItem> BudgetItems { get; set; }
-
         public double LimitAmount { get; set; }
 
         public bool IsDeleted { get; set; }
 
         public DateTime? DeletedOnUtc { get; set; }
+
+        public string UserId { get; set; }
     }
 }

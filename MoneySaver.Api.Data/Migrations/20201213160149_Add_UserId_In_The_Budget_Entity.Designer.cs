@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MoneySaver.Api.Data;
 
 namespace MoneySaver.Api.Data.Migrations
 {
     [DbContext(typeof(MoneySaverApiContext))]
-    partial class MoneySaverApiContextModelSnapshot : ModelSnapshot
+    [Migration("20201213160149_Add_UserId_In_The_Budget_Entity")]
+    partial class Add_UserId_In_The_Budget_Entity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -60,6 +62,9 @@ namespace MoneySaver.Api.Data.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<int>("BudgetId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("DeletedOnUtc")
                         .HasColumnType("datetime2");
 
@@ -69,13 +74,17 @@ namespace MoneySaver.Api.Data.Migrations
                     b.Property<double>("LimitAmount")
                         .HasColumnType("float");
 
+                    b.Property<double>("SpentAmount")
+                        .HasColumnType("float");
+
                     b.Property<int>("TransactionCategoryId")
                         .HasColumnType("int");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("BudgetItemId");
+
+                    b.HasIndex("BudgetId");
+
+                    b.HasIndex("TransactionCategoryId");
 
                     b.ToTable("BudgetItems");
                 });
@@ -160,6 +169,21 @@ namespace MoneySaver.Api.Data.Migrations
                             IsDeleted = false,
                             Name = "Sport"
                         });
+                });
+
+            modelBuilder.Entity("MoneySaver.Api.Data.BudgetItem", b =>
+                {
+                    b.HasOne("MoneySaver.Api.Data.Budget", "Budget")
+                        .WithMany("BudgetItems")
+                        .HasForeignKey("BudgetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MoneySaver.Api.Data.TransactionCategory", "TransactionCategory")
+                        .WithMany()
+                        .HasForeignKey("TransactionCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("MoneySaver.Api.Data.Transaction", b =>

@@ -22,18 +22,18 @@ namespace MoneySaver.Api.Data
             modelBuilder.Entity<TransactionCategory>().HasData(new TransactionCategory { TransactionCategoryId = 1, Name = "Food" });
             modelBuilder.Entity<TransactionCategory>().HasData(new TransactionCategory { TransactionCategoryId = 2, Name = "Sport" });
 
-            modelBuilder.Entity<Transaction>().HasData(new Transaction
-            {
-               Id = Guid.NewGuid(),
-               Amount = 3.40,
-               AdditionalNote = "Тест бележка",
-               CreateOn = DateTime.UtcNow,
-               ModifyOn = DateTime.UtcNow,
-               TransactionDate = DateTime.UtcNow,
-               TransactionCategoryId = 1,
-               UserId = 1,
-               IsDeleted = false
-            });
+            //modelBuilder.Entity<Transaction>().HasData(new Transaction
+            //{
+            //   Id = Guid.NewGuid(),
+            //   Amount = 3.40,
+            //   AdditionalNote = "Тест бележка",
+            //   CreateOn = DateTime.UtcNow,
+            //   ModifyOn = DateTime.UtcNow,
+            //   TransactionDate = DateTime.UtcNow,
+            //   TransactionCategoryId = 1,
+            //   UserId = 1,
+            //   IsDeleted = false
+            //});
         }
     }
 }
