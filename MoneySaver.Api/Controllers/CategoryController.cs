@@ -38,27 +38,27 @@ namespace MoneySaver.Api.Controllers
         }
 
         [HttpGet("{transactionCategoryId}")]
-        public IActionResult GetCategory(int transactionCategoryId)
+        public async Task<IActionResult> GetCategoryAsync(int transactionCategoryId)
         {
-            return this.Ok(this.categoryService.GetCategory(transactionCategoryId));
+            return this.Ok(await this.categoryService.GetCategoryAsync(transactionCategoryId));
         }
 
         [HttpPut]
-        public IActionResult UpdateCategory(TransactionCategoryModel transactionCategoryModel)
+        public async Task<IActionResult> UpdateCategoryAsync(TransactionCategoryModel transactionCategoryModel)
         {
-            return this.Ok(this.categoryService.UpdateCategory(transactionCategoryModel));
+            return this.Ok(await this.categoryService.UpdateCategoryAsync(transactionCategoryModel));
         }
 
         [HttpPost]
-        public IActionResult CreateCategory(TransactionCategoryModel transactionCategoryModel)
+        public async Task<IActionResult> CreateCategoryAsync(TransactionCategoryModel transactionCategoryModel)
         {
-            return this.Ok(this.categoryService.CreateCategory(transactionCategoryModel));
+            return this.Ok(await this.categoryService.CreateCategoryAsync(transactionCategoryModel));
         }
 
         [HttpDelete]
-        public void RemoveTransaction(int transactionCategoryId)
+        public async void RemoveCategoryAsync(int transactionCategoryId)
         {
-            this.categoryService.RemoveCategory(transactionCategoryId);
+             this.categoryService.RemoveCategoryAsync(transactionCategoryId);
         }
     }
 }

@@ -9,6 +9,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoneySaver.Api.Data", "Mone
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoneySaver.Api.Services", "MoneySaver.Api.Services\MoneySaver.Api.Services.csproj", "{E09516BF-F5F7-455E-BE46-C56317965775}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoneySaver.Identity.Api", "..\Autorisation\MoneySaver.Authorization\MoneySaver.Identity.Api\MoneySaver.Identity.Api.csproj", "{2E0F29F3-87D6-46DF-8DD1-CCB61910891C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoneySaver.App", "..\Blazor\MoneySaver.App\MoneySaver.App\MoneySaver.App.csproj", "{C38E1E30-DA88-46F5-94B3-47937FA21399}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoneySaver.App.Models", "..\Blazor\MoneySaver.App\MoneySaver.App.Models\MoneySaver.App.Models.csproj", "{80DEB3F4-A294-4292-894C-C59FB3B56FD3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +33,18 @@ Global
 		{E09516BF-F5F7-455E-BE46-C56317965775}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E09516BF-F5F7-455E-BE46-C56317965775}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E09516BF-F5F7-455E-BE46-C56317965775}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E0F29F3-87D6-46DF-8DD1-CCB61910891C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E0F29F3-87D6-46DF-8DD1-CCB61910891C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E0F29F3-87D6-46DF-8DD1-CCB61910891C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E0F29F3-87D6-46DF-8DD1-CCB61910891C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C38E1E30-DA88-46F5-94B3-47937FA21399}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C38E1E30-DA88-46F5-94B3-47937FA21399}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C38E1E30-DA88-46F5-94B3-47937FA21399}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C38E1E30-DA88-46F5-94B3-47937FA21399}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80DEB3F4-A294-4292-894C-C59FB3B56FD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80DEB3F4-A294-4292-894C-C59FB3B56FD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80DEB3F4-A294-4292-894C-C59FB3B56FD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80DEB3F4-A294-4292-894C-C59FB3B56FD3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

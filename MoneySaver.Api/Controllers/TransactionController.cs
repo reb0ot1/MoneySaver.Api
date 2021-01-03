@@ -23,34 +23,34 @@ namespace MoneySaver.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAllTransactionsAsync()
         {
             return this.Ok(await this.transactionService.GetAllTransactionsAsync());
         }
 
         [HttpGet("{transactionId}")]
-        public async Task<IActionResult> GetTransaction(Guid transactionId)
+        public async Task<IActionResult> GetTransactionAsync(Guid transactionId)
         {
             TransactionModel result = await this.transactionService.GetTransactionAsync(transactionId);
             return this.Ok(result);
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateTransaction(TransactionModel transactionModel)
+        public async Task<IActionResult> UpdateTransactionAsync(TransactionModel transactionModel)
         {
             var result = await this.transactionService.UpdateTransactionAsync(transactionModel);
             return this.Ok(result);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateTransaction(TransactionModel transactionModel)
+        public async Task<IActionResult> CreateTransactionAsync(TransactionModel transactionModel)
         {
             var result = await this.transactionService.CreateTransactionAsync(transactionModel);
             return this.Ok(result);
         }
 
         [HttpDelete]
-        public async Task<IActionResult> RemoveTransaction(Guid transactionId)
+        public async Task<IActionResult> RemoveTransactionAsync(Guid transactionId)
         {
             await this.transactionService.RemoveTransactionAsync(transactionId);
 

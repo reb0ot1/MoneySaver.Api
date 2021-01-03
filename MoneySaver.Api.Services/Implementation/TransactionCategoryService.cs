@@ -23,10 +23,18 @@ namespace MoneySaver.Api.Services.Implementation
             this.mapper = mapper;
         }
 
-        public TransactionCategoryModel CreateCategory(TransactionCategoryModel categoryModel)
+        public async Task<TransactionCategoryModel> CreateCategoryAsync(TransactionCategoryModel categoryModel)
         {
-            TransactionCategory transactionCategory = mapper.Map<TransactionCategory>(categoryModel);
-            this.categoryRepository.AddAsync(transactionCategory);
+            try
+            {
+                TransactionCategory transactionCategory = mapper.Map<TransactionCategory>(categoryModel);
+                await this.categoryRepository.AddAsync(transactionCategory);
+            }
+
+            catch (Exception ex)
+            {
+                ;
+            }
 
             return categoryModel;
         }
@@ -73,26 +81,52 @@ namespace MoneySaver.Api.Services.Implementation
             return result;
         }
 
-        public TransactionCategoryModel GetCategory(int id)
+        public async Task<TransactionCategoryModel> GetCategoryAsync(int id)
         {
-            TransactionCategory transactionCategory = this.categoryRepository.GetAll().FirstOrDefault(c => c.TransactionCategoryId == id);
-            TransactionCategoryModel transactionCategoryModel = mapper.Map<TransactionCategoryModel>(transactionCategory);
+            TransactionCategoryModel transactionCategoryModel = new TransactionCategoryModel();
+
+            try
+            {
+                TransactionCategory transactionCategory = await this.categoryRepository.GetAll().FirstOrDefaultAsync(c => c.TransactionCategoryId == id);
+                transactionCategoryModel = mapper.Map<TransactionCategoryModel>(transactionCategory);
+            }
+
+            catch (Exception ex)
+            {
+                ;
+            }
 
             return transactionCategoryModel;
         }
 
-        public void RemoveCategory(int id)
+        public async void RemoveCategoryAsync(int id)
         {
-            TransactionCategory transactionCategory = this.categoryRepository.GetAll().FirstOrDefault(c => c.TransactionCategoryId == id);
-            transactionCategory.IsDeleted = true;
-            transactionCategory.DeletedOnUtc = DateTime.UtcNow;
-            this.categoryRepository.RemoveAsync(transactionCategory);
+            try
+            {
+                TransactionCategory transactionCategory = await this.categoryRepository.GetAll().FirstOrDefaultAsync(c => c.TransactionCategoryId == id);
+                transactionCategory.IsDeleted = true;
+                transactionCategory.DeletedOnUtc = DateTime.UtcNow;
+                this.categoryRepository.RemoveAsync(transactionCategory);
+            }
+
+            catch (Exception ex)
+            {
+                ;
+            }
         }
 
-        public TransactionCategoryModel UpdateCategory(TransactionCategoryModel categoryModel)
+        public async Task<TransactionCategoryModel> UpdateCategoryAsync(TransactionCategoryModel categoryModel)
         {
-            TransactionCategory transactionCategory = mapper.Map<TransactionCategory>(categoryModel);
-            this.categoryRepository.UpdateAsync(transactionCategory);
+            try
+            {
+                TransactionCategory transactionCategory = mapper.Map<TransactionCategory>(categoryModel);
+                await this.categoryRepository.UpdateAsync(transactionCategory);
+            }
+
+            catch (Exception ex)
+            {
+                ;
+            }
 
             return categoryModel;
         }
