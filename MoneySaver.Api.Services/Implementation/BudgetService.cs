@@ -34,6 +34,32 @@ namespace MoneySaver.Api.Services.Implementation
             this.transactionRepository = transactionRepository;
         }
 
+        public async Task<BudgetItemModel> AddItemAsync(BudgetItemModel budgetItemModel)
+        {
+            BudgetItem budgetItem = mapper.Map<BudgetItem>(budgetItemModel);
+            var result = await this.budgetItemRepository.AddAsync(budgetItem);
+            budgetItemModel.Id = result.Id;
+
+            return budgetItemModel;
+        }
+
+        public async Task<BudgetItemModel> EditItemAsync(BudgetItemModel budgetItemModel)
+        {
+            var budgetItemEntity = await this.budgetItemRepository
+                .GetAll()
+                .AnyAsync(i => i.Id == budgetItemModel.Id);
+
+            if (!budgetItemEntity)
+            {
+                return null;
+            }
+
+            BudgetItem budgetItem = mapper.Map<BudgetItem>(budgetItemModel);
+            var result = await this.budgetItemRepository.UpdateAsync(budgetItem);
+
+            return budgetItemModel;
+        }
+
         public BudgetModel CreateBudget(BudgetModel budgetModel)
         {
             Budget budget = mapper.Map<Budget>(budgetModel);
@@ -85,7 +111,7 @@ namespace MoneySaver.Api.Services.Implementation
             {
                 var budgetItemModel = new BudgetItemModel
                 {
-                    Id = item.budgetItem.BudgetItemId,
+                    Id = item.budgetItem.Id,
                     TransactionCategoryId = item.trans.TransactionCategoryId,
                     LimitAmount = item.budgetItem.LimitAmount,
                     SpentAmount = transactions.
