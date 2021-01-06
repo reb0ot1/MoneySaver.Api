@@ -19,7 +19,6 @@
     },
     "MoneySaver.Api": {
       "commandName": "Project",
-      "launchBrowser": true,
       "launchUrl": "api/transaction",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"

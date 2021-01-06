@@ -33,6 +33,25 @@ namespace MoneySaver.Api.Controllers
             return this.Ok(result);
         }
 
+        [HttpPost("additem")]
+        public async Task<IActionResult> AddBudgetItem(BudgetItemModel budgetItem)
+        {
+            BudgetItemModel result = await this.budgetService.AddItemAsync(budgetItem);
+            return this.Ok(result);
+        }
+
+        [HttpPut("updateitem")]
+        public async Task<IActionResult> UpdateBudgetItem(BudgetItemModel budgetItem)
+        {
+            BudgetItemModel result = await this.budgetService.EditItemAsync(budgetItem);
+            if (result == null)
+            {
+                return this.BadRequest();
+            }
+
+            return this.Ok(result);
+        }
+
         [HttpGet]
         public IActionResult GetAll()
         {
