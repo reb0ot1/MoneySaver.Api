@@ -9,9 +9,9 @@ namespace MoneySaver.Api.Services.Contracts
     public interface ITransactionCategoryService
     {
         Task<IEnumerable<TransactionCategoryModel>> GetAllCategoriesAsync();
-        TransactionCategoryModel GetCategory(int id);
-        TransactionCategoryModel UpdateCategory(TransactionCategoryModel categoryModel);
-        TransactionCategoryModel CreateCategory(TransactionCategoryModel categoryModel);
-        void RemoveCategory(int id);
+        Task<TransactionCategoryModel> GetCategoryAsync(int id);
+        Task<TransactionCategoryModel> UpdateCategoryAsync(TransactionCategoryModel categoryModel);
+        Task<TransactionCategoryModel> CreateCategoryAsync(TransactionCategoryModel categoryModel);
+        Task RemoveCategoryAsync(int id);
     }
 }

@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using MoneySaver.Api.Services.Contracts;
 using MoneySaver.Api.Services.Models;
 using System;
+using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MoneySaver.Api.Controllers
@@ -23,29 +25,35 @@ namespace MoneySaver.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAllTransactions()
         {
-            return this.Ok(await this.transactionService.GetAllTransactionsAsync());
+            IEnumerable<TransactionModel> result = await this.transactionService.GetAllTransactionsAsync();
+
+            return this.Ok(result);
         }
 
         [HttpGet("{transactionId}")]
         public async Task<IActionResult> GetTransaction(Guid transactionId)
         {
             TransactionModel result = await this.transactionService.GetTransactionAsync(transactionId);
+
             return this.Ok(result);
         }
 
         [HttpPut]
         public async Task<IActionResult> UpdateTransaction(TransactionModel transactionModel)
         {
-            var result = await this.transactionService.UpdateTransactionAsync(transactionModel);
+            TransactionModel result = await this.transactionService.UpdateTransactionAsync(transactionModel);
+
             return this.Ok(result);
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateTransaction(TransactionModel transactionModel)
         {
-            var result = await this.transactionService.CreateTransactionAsync(transactionModel);
+            //TODO Create Middlewear for UserClaims(Id) and use it in the Service
+            TransactionModel result = await this.transactionService.CreateTransactionAsync(transactionModel);
+
             return this.Ok(result);
         }
 
