@@ -89,7 +89,7 @@ namespace MoneySaver.Api.Services.Implementation
         public async Task<BudgetModel> GetBudgetItems(Services.Models.Enums.BudgetType budgetType)
         {
             //TODO: Add filtration by user id
-            var query = from budgetItem in this.budgetItemRepository.GetAll()
+            var query = from budgetItem in this.budgetItemRepository.GetAll().Where(e => !e.IsDeleted)
                         join trans in this.transactionCategory.GetAll()
                             on budgetItem.TransactionCategoryId equals trans.TransactionCategoryId
                         select new { budgetItem, trans };
@@ -124,9 +124,6 @@ namespace MoneySaver.Api.Services.Implementation
                 budgetItems.Add(budgetItemModel);
             }
 
-            //IEnumerable<TransactionCategory> categories = this.transactionCategory
-            //    .GetAll()
-            //    .Where(e => categoryIds.Contains(e.TransactionCategoryId));
             var budgetModel = new BudgetModel
             {
                 BudgetItems = budgetItems,
@@ -153,6 +150,13 @@ namespace MoneySaver.Api.Services.Implementation
             this.budgetRepository.UpdateAsync(budget);
 
             return budgetModel;
+        }
+
+        public async Task RemoveItemAsync(int id)
+        {
+            BudgetItem item = this.budgetItemRepository.GetAll().FirstOrDefault(i => i.Id == id);
+            item.IsDeleted = true;
+            await this.budgetItemRepository.RemoveAsync(item);
         }
     }
 }

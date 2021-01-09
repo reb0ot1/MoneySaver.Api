@@ -52,6 +52,13 @@ namespace MoneySaver.Api.Controllers
             return this.Ok(result);
         }
 
+        [HttpDelete("removeitem/{id}")]
+        public async Task<IActionResult> RemoveItem(int id)
+        {
+            await this.budgetService.RemoveItemAsync(id);
+            return this.Ok();
+        }
+
         [HttpGet]
         public IActionResult GetAll()
         {

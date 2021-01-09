@@ -39,6 +39,7 @@ namespace MoneySaver.Api.Data.Repositories
 
         public async Task RemoveAsync(TEntity entity)
         {
+            //TODO: Should have entities which can be deleted from the database and such which will  but with IsDeleted flag set true
             //this.databaseContext.Remove(entity);
             this.databaseContext.Update(entity);
 
