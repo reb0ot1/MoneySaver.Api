@@ -52,8 +52,7 @@ namespace MoneySaver.Api.Controllers
         public async Task<IActionResult> CreateTransaction(TransactionModel transactionModel)
         {
             //TODO Create Middlewear for UserClaims(Id) and use it in the Service
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            TransactionModel result = await this.transactionService.CreateTransactionAsync(transactionModel, userId);
+            TransactionModel result = await this.transactionService.CreateTransactionAsync(transactionModel);
 
             return this.Ok(result);
         }

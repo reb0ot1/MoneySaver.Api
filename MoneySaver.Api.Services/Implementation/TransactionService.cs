@@ -23,12 +23,11 @@ namespace MoneySaver.Api.Services.Implementation
             this.mapper = mapper;
         }
 
-        public async Task<TransactionModel> CreateTransactionAsync(TransactionModel transactionModel, string userId)
+        public async Task<TransactionModel> CreateTransactionAsync(TransactionModel transactionModel)
         {
             try
             {
                 Transaction transaction = mapper.Map<Transaction>(transactionModel);
-                transaction.UserId = userId;
                 await this.transactionRepository.AddAsync(transaction);
 
                 return transactionModel;
