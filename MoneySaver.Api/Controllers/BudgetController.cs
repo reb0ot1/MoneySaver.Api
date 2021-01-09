@@ -24,7 +24,7 @@ namespace MoneySaver.Api.Controllers
             this.logger = logger;
             this.budgetService = budgetService;
         }
-
+         
         [HttpGet("items")]
         public async Task<IActionResult> GetBudgetItemsAsync()
         {
