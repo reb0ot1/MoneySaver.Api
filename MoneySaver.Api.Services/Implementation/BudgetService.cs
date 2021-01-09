@@ -34,6 +34,32 @@ namespace MoneySaver.Api.Services.Implementation
             this.transactionRepository = transactionRepository;
         }
 
+        public async Task<BudgetItemModel> AddItemAsync(BudgetItemModel budgetItemModel)
+        {
+            BudgetItem budgetItem = mapper.Map<BudgetItem>(budgetItemModel);
+            var result = await this.budgetItemRepository.AddAsync(budgetItem);
+            budgetItemModel.Id = result.Id;
+
+            return budgetItemModel;
+        }
+
+        public async Task<BudgetItemModel> EditItemAsync(BudgetItemModel budgetItemModel)
+        {
+            var budgetItemEntity = await this.budgetItemRepository
+                .GetAll()
+                .AnyAsync(i => i.Id == budgetItemModel.Id);
+
+            if (!budgetItemEntity)
+            {
+                return null;
+            }
+
+            BudgetItem budgetItem = mapper.Map<BudgetItem>(budgetItemModel);
+            var result = await this.budgetItemRepository.UpdateAsync(budgetItem);
+
+            return budgetItemModel;
+        }
+
         public BudgetModel CreateBudget(BudgetModel budgetModel)
         {
             Budget budget = mapper.Map<Budget>(budgetModel);
@@ -63,7 +89,7 @@ namespace MoneySaver.Api.Services.Implementation
         public async Task<BudgetModel> GetBudgetItems(Services.Models.Enums.BudgetType budgetType)
         {
             //TODO: Add filtration by user id
-            var query = from budgetItem in this.budgetItemRepository.GetAll()
+            var query = from budgetItem in this.budgetItemRepository.GetAll().Where(e => !e.IsDeleted)
                         join trans in this.transactionCategory.GetAll()
                             on budgetItem.TransactionCategoryId equals trans.TransactionCategoryId
                         select new { budgetItem, trans };
@@ -85,7 +111,7 @@ namespace MoneySaver.Api.Services.Implementation
             {
                 var budgetItemModel = new BudgetItemModel
                 {
-                    Id = item.budgetItem.BudgetItemId,
+                    Id = item.budgetItem.Id,
                     TransactionCategoryId = item.trans.TransactionCategoryId,
                     LimitAmount = item.budgetItem.LimitAmount,
                     SpentAmount = transactions.
@@ -98,9 +124,6 @@ namespace MoneySaver.Api.Services.Implementation
                 budgetItems.Add(budgetItemModel);
             }
 
-            //IEnumerable<TransactionCategory> categories = this.transactionCategory
-            //    .GetAll()
-            //    .Where(e => categoryIds.Contains(e.TransactionCategoryId));
             var budgetModel = new BudgetModel
             {
                 BudgetItems = budgetItems,
@@ -127,6 +150,13 @@ namespace MoneySaver.Api.Services.Implementation
             this.budgetRepository.UpdateAsync(budget);
 
             return budgetModel;
+        }
+
+        public async Task RemoveItemAsync(int id)
+        {
+            BudgetItem item = this.budgetItemRepository.GetAll().FirstOrDefault(i => i.Id == id);
+            item.IsDeleted = true;
+            await this.budgetItemRepository.RemoveAsync(item);
         }
     }
 }

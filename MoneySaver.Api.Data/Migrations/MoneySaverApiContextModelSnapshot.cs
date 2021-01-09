@@ -54,7 +54,7 @@ namespace MoneySaver.Api.Data.Migrations
 
             modelBuilder.Entity("MoneySaver.Api.Data.BudgetItem", b =>
                 {
-                    b.Property<int>("BudgetItemId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("Id")
                         .HasColumnType("int")
@@ -75,7 +75,7 @@ namespace MoneySaver.Api.Data.Migrations
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("BudgetItemId");
+                    b.HasKey("Id");
 
                     b.ToTable("BudgetItems");
                 });

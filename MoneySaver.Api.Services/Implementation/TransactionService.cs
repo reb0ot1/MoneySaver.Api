@@ -44,7 +44,10 @@ namespace MoneySaver.Api.Services.Implementation
         {
             try
             {
-                List<TransactionModel> transactionModels = await this.transactionRepository.GetAll().Select(m => mapper.Map<TransactionModel>(m)).ToListAsync();
+                List<TransactionModel> transactionModels = await this.transactionRepository
+                    .GetAll()
+                    .Select(m => mapper.Map<TransactionModel>(m))
+                    .ToListAsync();
 
                 return transactionModels;
             }

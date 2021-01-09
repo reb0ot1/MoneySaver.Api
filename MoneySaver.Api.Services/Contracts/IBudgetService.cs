@@ -14,7 +14,9 @@ namespace MoneySaver.Api.Services.Contracts
         BudgetModel UpdateBudget(BudgetModel budgetModel);
         BudgetModel CreateBudget(BudgetModel budgetModel);
         void RemoveBudget(int id);
-
         Task<BudgetModel> GetBudgetItems(BudgetType budgetType);
+        Task<BudgetItemModel> AddItemAsync(BudgetItemModel budgetItem);
+        Task<BudgetItemModel> EditItemAsync(BudgetItemModel budgetItemModel);
+        Task RemoveItemAsync(int id);
     }
 }

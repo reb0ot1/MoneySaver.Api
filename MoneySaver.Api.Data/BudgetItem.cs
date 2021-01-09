@@ -8,7 +8,7 @@ namespace MoneySaver.Api.Data
     public class BudgetItem
     {
         [Column("Id")]
-        public int BudgetItemId { get; set; }
+        public int Id { get; set; }
 
         public int TransactionCategoryId { get; set; }
 
