@@ -38,27 +38,33 @@ namespace MoneySaver.Api.Controllers
         }
 
         [HttpGet("{transactionCategoryId}")]
-        public async Task<IActionResult> GetCategoryAsync(int transactionCategoryId)
+        public async Task<IActionResult> GetCategory(int transactionCategoryId)
         {
-            return this.Ok(await this.categoryService.GetCategoryAsync(transactionCategoryId));
+            TransactionCategoryModel result = await this.categoryService.GetCategoryAsync(transactionCategoryId);
+
+            return this.Ok(result);
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateCategoryAsync(TransactionCategoryModel transactionCategoryModel)
+        public async Task<IActionResult> UpdateCategory(TransactionCategoryModel transactionCategoryModel)
         {
-            return this.Ok(await this.categoryService.UpdateCategoryAsync(transactionCategoryModel));
+            TransactionCategoryModel result = await this.categoryService.UpdateCategoryAsync(transactionCategoryModel);
+
+            return this.Ok(result);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateCategoryAsync(TransactionCategoryModel transactionCategoryModel)
+        public async Task<IActionResult> CreateCategory(TransactionCategoryModel transactionCategoryModel)
         {
-            return this.Ok(await this.categoryService.CreateCategoryAsync(transactionCategoryModel));
+            TransactionCategoryModel result = await this.categoryService.CreateCategoryAsync(transactionCategoryModel);
+
+            return this.Ok(result);
         }
 
         [HttpDelete]
-        public async void RemoveCategoryAsync(int transactionCategoryId)
+        public async Task RemoveCategory(int transactionCategoryId)
         {
-             this.categoryService.RemoveCategoryAsync(transactionCategoryId);
+             await this.categoryService.RemoveCategoryAsync(transactionCategoryId);
         }
     }
 }

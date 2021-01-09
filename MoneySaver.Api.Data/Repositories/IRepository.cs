@@ -14,7 +14,6 @@ namespace MoneySaver.Api.Data.Repositories
         Task<TEntity> AddAsync(TEntity entity);
 
         Task<TEntity> UpdateAsync(TEntity entity);
-
-        void RemoveAsync(TEntity entity);
+        Task RemoveAsync(TEntity entity);
     }
 }

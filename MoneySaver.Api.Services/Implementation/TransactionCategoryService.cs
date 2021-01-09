@@ -28,15 +28,19 @@ namespace MoneySaver.Api.Services.Implementation
             try
             {
                 TransactionCategory transactionCategory = mapper.Map<TransactionCategory>(categoryModel);
-                await this.categoryRepository.AddAsync(transactionCategory);
+                var result = await this.categoryRepository.AddAsync(transactionCategory);
+                categoryModel.TransactionCategoryId = result.TransactionCategoryId;
+
+                return categoryModel;
             }
 
             catch (Exception ex)
             {
+                //TODO Log Exception
                 ;
             }
 
-            return categoryModel;
+            return null;
         }
 
         public async Task<IEnumerable<TransactionCategoryModel>> GetAllCategoriesAsync()
@@ -72,13 +76,15 @@ namespace MoneySaver.Api.Services.Implementation
                 }
 
                 result = parentTransactionCategoryModels;
+
+                return result;
             }
             catch (Exception ex)
             {
                 ;
             }
-            
-            return result;
+
+            return null;
         }
 
         public async Task<TransactionCategoryModel> GetCategoryAsync(int id)
@@ -89,24 +95,26 @@ namespace MoneySaver.Api.Services.Implementation
             {
                 TransactionCategory transactionCategory = await this.categoryRepository.GetAll().FirstOrDefaultAsync(c => c.TransactionCategoryId == id);
                 transactionCategoryModel = mapper.Map<TransactionCategoryModel>(transactionCategory);
+
+                return transactionCategoryModel;
             }
 
             catch (Exception ex)
             {
-                ;
+               ;
             }
 
-            return transactionCategoryModel;
+            return null;
         }
 
-        public async void RemoveCategoryAsync(int id)
+        public async Task RemoveCategoryAsync(int id)
         {
             try
             {
                 TransactionCategory transactionCategory = await this.categoryRepository.GetAll().FirstOrDefaultAsync(c => c.TransactionCategoryId == id);
                 transactionCategory.IsDeleted = true;
                 transactionCategory.DeletedOnUtc = DateTime.UtcNow;
-                this.categoryRepository.RemoveAsync(transactionCategory);
+                await this.categoryRepository.RemoveAsync(transactionCategory);
             }
 
             catch (Exception ex)
@@ -121,6 +129,8 @@ namespace MoneySaver.Api.Services.Implementation
             {
                 TransactionCategory transactionCategory = mapper.Map<TransactionCategory>(categoryModel);
                 await this.categoryRepository.UpdateAsync(transactionCategory);
+
+                return categoryModel;
             }
 
             catch (Exception ex)
@@ -128,7 +138,7 @@ namespace MoneySaver.Api.Services.Implementation
                 ;
             }
 
-            return categoryModel;
+            return null;
         }
     }
 }

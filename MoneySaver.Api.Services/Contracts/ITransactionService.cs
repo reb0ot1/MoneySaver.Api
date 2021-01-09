@@ -12,7 +12,7 @@ namespace MoneySaver.Api.Services.Contracts
         Task<IEnumerable<TransactionModel>> GetAllTransactionsAsync();
         Task<TransactionModel> GetTransactionAsync(Guid id);
         Task<TransactionModel> UpdateTransactionAsync(TransactionModel transaction);
-        Task<TransactionModel> CreateTransactionAsync(TransactionModel transactionModel);
+        Task<TransactionModel> CreateTransactionAsync(TransactionModel transactionModel, string userId);
         Task RemoveTransactionAsync(Guid id);
     }
 }

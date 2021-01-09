@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using MoneySaver.Api.Services.Contracts;
 using MoneySaver.Api.Services.Models;
 using System;
+using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MoneySaver.Api.Controllers
@@ -23,34 +25,41 @@ namespace MoneySaver.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllTransactionsAsync()
+        public async Task<IActionResult> GetAllTransactions()
         {
-            return this.Ok(await this.transactionService.GetAllTransactionsAsync());
+            IEnumerable<TransactionModel> result = await this.transactionService.GetAllTransactionsAsync();
+
+            return this.Ok(result);
         }
 
         [HttpGet("{transactionId}")]
-        public async Task<IActionResult> GetTransactionAsync(Guid transactionId)
+        public async Task<IActionResult> GetTransaction(Guid transactionId)
         {
             TransactionModel result = await this.transactionService.GetTransactionAsync(transactionId);
+
             return this.Ok(result);
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateTransactionAsync(TransactionModel transactionModel)
+        public async Task<IActionResult> UpdateTransaction(TransactionModel transactionModel)
         {
-            var result = await this.transactionService.UpdateTransactionAsync(transactionModel);
+            TransactionModel result = await this.transactionService.UpdateTransactionAsync(transactionModel);
+
             return this.Ok(result);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateTransactionAsync(TransactionModel transactionModel)
+        public async Task<IActionResult> CreateTransaction(TransactionModel transactionModel)
         {
-            var result = await this.transactionService.CreateTransactionAsync(transactionModel);
+            //TODO Create Middlewear for UserClaims(Id) and use it in the Service
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            TransactionModel result = await this.transactionService.CreateTransactionAsync(transactionModel, userId);
+
             return this.Ok(result);
         }
 
         [HttpDelete]
-        public async Task<IActionResult> RemoveTransactionAsync(Guid transactionId)
+        public async Task<IActionResult> RemoveTransaction(Guid transactionId)
         {
             await this.transactionService.RemoveTransactionAsync(transactionId);
 

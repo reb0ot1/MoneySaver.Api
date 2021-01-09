@@ -37,7 +37,7 @@ namespace MoneySaver.Api.Data.Repositories
             return entity;
         }
 
-        public async void RemoveAsync(TEntity entity)
+        public async Task RemoveAsync(TEntity entity)
         {
             //this.databaseContext.Remove(entity);
             this.databaseContext.Update(entity);

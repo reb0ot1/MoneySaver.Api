@@ -12,12 +12,9 @@ namespace MoneySaver.Api
     {
         public Mapper() 
         {
-            CreateMap<Transaction, TransactionModel>();
-            CreateMap<TransactionModel, Transaction>();
-            CreateMap<TransactionCategory, TransactionCategoryModel>();
-            CreateMap<TransactionCategoryModel, TransactionCategory>();
-            CreateMap<Budget, BudgetModel>();
-            CreateMap<BudgetModel, Budget>();
+            CreateMap<Transaction, TransactionModel>().ReverseMap();
+            CreateMap<TransactionCategory, TransactionCategoryModel>().ReverseMap();
+            CreateMap<Budget, BudgetModel>().ReverseMap();
         }
     }
 }
