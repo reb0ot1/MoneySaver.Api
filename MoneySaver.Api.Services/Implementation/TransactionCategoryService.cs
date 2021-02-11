@@ -7,7 +7,6 @@ using MoneySaver.Api.Services.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MoneySaver.Api.Services.Implementation
@@ -52,30 +51,7 @@ namespace MoneySaver.Api.Services.Implementation
                 .GetAll()
                 .ToListAsync();
 
-                var parentTransactionCategoryModels = categories
-                    .Where(w => w.ParentId == null)
-                    .Select(s => new TransactionCategoryModel
-                    {
-                        TransactionCategoryId = s.TransactionCategoryId,
-                        Name = s.Name
-                    })
-                    .ToList();
-
-                foreach (var parentCategory in parentTransactionCategoryModels)
-                {
-                    var children = categories.Where(w => w.ParentId == parentCategory.TransactionCategoryId);
-                    if (children.Any())
-                    {
-                        parentCategory.Children = children
-                            .Select(s => new TransactionCategoryModel
-                            {
-                                Name = s.Name,
-                                TransactionCategoryId = s.TransactionCategoryId
-                            });
-                    }
-                }
-
-                result = parentTransactionCategoryModels;
+                result = categories.Select(s => mapper.Map<TransactionCategoryModel>(s));
 
                 return result;
             }
@@ -93,7 +69,10 @@ namespace MoneySaver.Api.Services.Implementation
 
             try
             {
-                TransactionCategory transactionCategory = await this.categoryRepository.GetAll().FirstOrDefaultAsync(c => c.TransactionCategoryId == id);
+                TransactionCategory transactionCategory = await this.categoryRepository
+                    .GetAll()
+                    .FirstOrDefaultAsync(c => c.TransactionCategoryId == id);
+
                 transactionCategoryModel = mapper.Map<TransactionCategoryModel>(transactionCategory);
 
                 return transactionCategoryModel;
@@ -111,7 +90,10 @@ namespace MoneySaver.Api.Services.Implementation
         {
             try
             {
-                TransactionCategory transactionCategory = await this.categoryRepository.GetAll().FirstOrDefaultAsync(c => c.TransactionCategoryId == id);
+                TransactionCategory transactionCategory = await this.categoryRepository
+                    .GetAll()
+                    .FirstOrDefaultAsync(c => c.TransactionCategoryId == id);
+
                 transactionCategory.IsDeleted = true;
                 transactionCategory.DeletedOnUtc = DateTime.UtcNow;
                 await this.categoryRepository.RemoveAsync(transactionCategory);
