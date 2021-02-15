@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MoneySaver.Api.Services.Contracts;
 using MoneySaver.Api.Services.Models;
+using MoneySaver.Api.Services.Models.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -17,11 +19,23 @@ namespace MoneySaver.Api.Controllers
     {
         private ILogger<TransactionController> logger;
         private ITransactionService transactionService;
+        private Authority authority;
 
-        public TransactionController(ILogger<TransactionController> logger, ITransactionService transactionService)
+        public TransactionController(
+            ILogger<TransactionController> logger,
+            ITransactionService transactionService,
+            Authority authority)
         {
+            this.authority = authority;
             this.logger = logger;
             this.transactionService = transactionService;
+        }
+
+        [AllowAnonymous]
+        [HttpGet("test")]
+        public async Task<IActionResult> GetAllTransactions1()
+        {
+            return this.Ok();
         }
 
         [HttpGet]
