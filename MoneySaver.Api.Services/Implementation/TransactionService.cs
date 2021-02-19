@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MoneySaver.Api.Data;
 using MoneySaver.Api.Data.Repositories;
 using MoneySaver.Api.Services.Contracts;
@@ -16,11 +17,13 @@ namespace MoneySaver.Api.Services.Implementation
     {
         private IRepository<Transaction> transactionRepository;
         private IMapper mapper;
+        private readonly ILogger<TransactionService> logger;
 
-        public TransactionService(IRepository<Transaction> transactionRepository, IMapper mapper)
+        public TransactionService(IRepository<Transaction> transactionRepository, IMapper mapper, ILogger<TransactionService> logger)
         {
             this.transactionRepository = transactionRepository;
             this.mapper = mapper;
+            this.logger = logger;
         }
 
         public async Task<TransactionModel> CreateTransactionAsync(TransactionModel transactionModel)
@@ -42,6 +45,7 @@ namespace MoneySaver.Api.Services.Implementation
 
         public async Task<IEnumerable<TransactionModel>> GetAllTransactionsAsync()
         {
+            this.logger.LogInformation("Getting all transactions");
             try
             {
                 List<TransactionModel> transactionModels = await this.transactionRepository

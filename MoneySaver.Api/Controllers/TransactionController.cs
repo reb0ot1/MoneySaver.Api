@@ -35,6 +35,9 @@ namespace MoneySaver.Api.Controllers
         [HttpGet("test")]
         public async Task<IActionResult> GetAllTransactions1()
         {
+            this.logger.LogInformation("TeST");
+            throw new Exception("TestExp");
+
             return this.Ok();
         }
 
