@@ -1,13 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using MoneySaver.Api.Models;
 using MoneySaver.Api.Services.Contracts;
-using MoneySaver.Api.Services.Models;
-using MoneySaver.Api.Services.Models.Configuration;
 using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MoneySaver.Api.Controllers
@@ -19,14 +16,11 @@ namespace MoneySaver.Api.Controllers
     {
         private ILogger<TransactionController> logger;
         private ITransactionService transactionService;
-        private Authority authority;
 
         public TransactionController(
             ILogger<TransactionController> logger,
-            ITransactionService transactionService,
-            Authority authority)
+            ITransactionService transactionService)
         {
-            this.authority = authority;
             this.logger = logger;
             this.transactionService = transactionService;
         }
@@ -58,7 +52,6 @@ namespace MoneySaver.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateTransaction(TransactionModel transactionModel)
         {
-            //TODO Create Middlewear for UserClaims(Id) and use it in the Service
             TransactionModel result = await this.transactionService.CreateTransactionAsync(transactionModel);
 
             return this.Ok(result);
