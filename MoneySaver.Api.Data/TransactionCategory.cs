@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MoneySaver.Api.Data
 {
-    public class TransactionCategory
+    public class TransactionCategory : IUser
     {
         [Column("Id")]
         public int TransactionCategoryId { get; set; }

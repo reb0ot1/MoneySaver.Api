@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MoneySaver.Api.Data
 {
-    public class Transaction
+    public class Transaction : IUser
     {
         public Guid Id { get; set; }
 

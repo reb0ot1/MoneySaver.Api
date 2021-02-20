@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MoneySaver.Api.Data
 {
-    public class BudgetItem
+    public class BudgetItem : IUser
     {
         [Column("Id")]
         public int Id { get; set; }

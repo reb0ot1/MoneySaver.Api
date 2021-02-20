@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MoneySaver.Api.Data;
 using MoneySaver.Api.Data.Repositories;
+using MoneySaver.Api.Models;
 using MoneySaver.Api.Services.Contracts;
 using MoneySaver.Api.Services.Models;
 using System;
@@ -15,11 +16,14 @@ namespace MoneySaver.Api.Services.Implementation
 {
     public class TransactionService : ITransactionService
     {
-        private IRepository<Transaction> transactionRepository;
-        private IMapper mapper;
+        private readonly IRepository<Transaction> transactionRepository;
+        private readonly IMapper mapper;
         private readonly ILogger<TransactionService> logger;
 
-        public TransactionService(IRepository<Transaction> transactionRepository, IMapper mapper, ILogger<TransactionService> logger)
+        public TransactionService(
+            IRepository<Transaction> transactionRepository, 
+            IMapper mapper, 
+            ILogger<TransactionService> logger)
         {
             this.transactionRepository = transactionRepository;
             this.mapper = mapper;

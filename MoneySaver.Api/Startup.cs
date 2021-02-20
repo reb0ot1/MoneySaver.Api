@@ -8,9 +8,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MoneySaver.Api.Data;
 using MoneySaver.Api.Data.Repositories;
+using MoneySaver.Api.Middlewares;
+using MoneySaver.Api.Models;
 using MoneySaver.Api.Services.Contracts;
 using MoneySaver.Api.Services.Implementation;
 using MoneySaver.Api.Services.Models.Configuration;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace MoneySaver.Api
 {
@@ -35,11 +38,14 @@ namespace MoneySaver.Api
             services.AddScoped<IBudgetService, BudgetService>();
             services.AddControllers();
             services.AddAutoMapper(typeof(Startup));
+            services.AddScoped<UserPackage>();
             services.AddCors(options =>
             {
                 options.AddPolicy("Open", builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
             });
             services.AddControllers();
+
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
@@ -65,6 +71,7 @@ namespace MoneySaver.Api
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseUserPackageMiddleware();
 
             app.UseEndpoints(endpoints =>
             {
