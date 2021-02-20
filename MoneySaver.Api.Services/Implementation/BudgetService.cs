@@ -2,12 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using MoneySaver.Api.Data;
 using MoneySaver.Api.Data.Repositories;
+using MoneySaver.Api.Models;
 using MoneySaver.Api.Services.Contracts;
-using MoneySaver.Api.Services.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MoneySaver.Api.Services.Implementation
@@ -86,7 +85,7 @@ namespace MoneySaver.Api.Services.Implementation
             return budgetModel;
         }
 
-        public async Task<BudgetModel> GetBudgetItems(Services.Models.Enums.BudgetType budgetType)
+        public async Task<BudgetModel> GetBudgetItems(Models.BudgetType budgetType)
         {
             //TODO: Add filtration by user id
             var query = from budgetItem in this.budgetItemRepository.GetAll().Where(e => !e.IsDeleted)

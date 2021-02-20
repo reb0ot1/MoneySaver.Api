@@ -12,4 +12,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MoneySaver.Api.Models\MoneySaver.Api.Models.csproj" />
+  </ItemGroup>
+
 </Project>

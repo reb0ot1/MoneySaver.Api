@@ -1,9 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MoneySaver.Api.Data;
 using MoneySaver.Api.Data.Repositories;
+using MoneySaver.Api.Models;
 using MoneySaver.Api.Services.Contracts;
-using MoneySaver.Api.Services.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,13 +14,18 @@ namespace MoneySaver.Api.Services.Implementation
 {
     public class TransactionCategoryService : ITransactionCategoryService
     {
-        private IRepository<TransactionCategory> categoryRepository;
-        private IMapper mapper;
+        private readonly IRepository<TransactionCategory> categoryRepository;
+        private readonly IMapper mapper;
+        private readonly ILogger<TransactionCategoryService> logger;
 
-        public TransactionCategoryService(IRepository<TransactionCategory> categoryRepository, IMapper mapper)
+        public TransactionCategoryService(
+            ILogger<TransactionCategoryService> logger,
+            IRepository<TransactionCategory> categoryRepository,
+            IMapper mapper)
         {
             this.categoryRepository = categoryRepository;
             this.mapper = mapper;
+            this.logger = logger;
         }
 
         public async Task<TransactionCategoryModel> CreateCategoryAsync(TransactionCategoryModel categoryModel)

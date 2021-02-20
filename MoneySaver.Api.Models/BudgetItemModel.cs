@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MoneySaver.Api.Services.Models
+namespace MoneySaver.Api.Models
 {
     public class BudgetItemModel
     {

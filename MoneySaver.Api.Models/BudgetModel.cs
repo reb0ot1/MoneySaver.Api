@@ -1,9 +1,6 @@
-﻿using MoneySaver.Api.Data;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
-namespace MoneySaver.Api.Services.Models
+namespace MoneySaver.Api.Models
 {
     public class BudgetModel
     {

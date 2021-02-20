@@ -7,7 +7,6 @@ namespace MoneySaver.Api.Data
     {
         public MoneySaverApiContext(DbContextOptions<MoneySaverApiContext> options) : base(options)
         {
-
         }
 
         public DbSet<Transaction> Transactions{ get; set; }
