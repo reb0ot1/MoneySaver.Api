@@ -5,7 +5,6 @@ using MoneySaver.Api.Data;
 using MoneySaver.Api.Data.Repositories;
 using MoneySaver.Api.Models;
 using MoneySaver.Api.Services.Contracts;
-using MoneySaver.Api.Services.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MoneySaver.Api.Services.Models.Configuration
+namespace MoneySaver.Api.Models
 {
     public class Authority
     {

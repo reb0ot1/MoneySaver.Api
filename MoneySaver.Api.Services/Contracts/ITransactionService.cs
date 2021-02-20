@@ -1,9 +1,7 @@
-﻿using MoneySaver.Api.Services.Models;
+﻿using MoneySaver.Api.Models;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
-using System.Transactions;
 
 namespace MoneySaver.Api.Services.Contracts
 {
