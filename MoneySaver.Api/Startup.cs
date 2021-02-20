@@ -10,6 +10,7 @@ using MoneySaver.Api.Data;
 using MoneySaver.Api.Data.Repositories;
 using MoneySaver.Api.Services.Contracts;
 using MoneySaver.Api.Services.Implementation;
+using MoneySaver.Api.Services.Models.Configuration;
 
 namespace MoneySaver.Api
 {
@@ -25,6 +26,7 @@ namespace MoneySaver.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton(Configuration.GetSection(nameof(Authority)).Get<Authority>());
             services.AddDbContext<MoneySaverApiContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -41,8 +43,8 @@ namespace MoneySaver.Api
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
-                    options.Authority = "https://localhost:5001";
-                    options.Audience = "moneysaverapi";
+                    options.Authority = Configuration["Authority:Url"];
+                    options.Audience = Configuration["Authority:Audiance"];
                     //options.TokenValidationParameters = new TokenValidationParameters()
                     //{
                     //    NameClaimType = "name"
