@@ -31,16 +31,6 @@ namespace MoneySaver.Api.Controllers
             this.transactionService = transactionService;
         }
 
-        [AllowAnonymous]
-        [HttpGet("test")]
-        public async Task<IActionResult> GetAllTransactions1()
-        {
-            this.logger.LogInformation("TeST");
-            throw new Exception("TestExp");
-
-            return this.Ok();
-        }
-
         [HttpGet]
         public async Task<IActionResult> GetAllTransactions()
         {
