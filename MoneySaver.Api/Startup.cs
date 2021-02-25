@@ -12,7 +12,6 @@ using MoneySaver.Api.Middlewares;
 using MoneySaver.Api.Models;
 using MoneySaver.Api.Services.Contracts;
 using MoneySaver.Api.Services.Implementation;
-using MoneySaver.Api.Services.Models.Configuration;
 using System.IdentityModel.Tokens.Jwt;
 
 namespace MoneySaver.Api
