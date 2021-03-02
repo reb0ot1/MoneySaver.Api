@@ -1,13 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using MoneySaver.Api.Data;
-using MoneySaver.Api.Data.Repositories;
+using MoneySaver.Api.Models;
 using MoneySaver.Api.Services.Contracts;
-using MoneySaver.Api.Services.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace MoneySaver.Api.Controllers
@@ -28,7 +22,7 @@ namespace MoneySaver.Api.Controllers
         [HttpGet("items")]
         public async Task<IActionResult> GetBudgetItemsAsync()
         {
-            var result = await this.budgetService.GetBudgetItems(Services.Models.Enums.BudgetType.Monthly);
+            var result = await this.budgetService.GetBudgetItems(BudgetType.Monthly);
 
             return this.Ok(result);
         }
