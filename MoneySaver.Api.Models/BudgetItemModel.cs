@@ -10,6 +10,8 @@ namespace MoneySaver.Api.Models
 
         public int TransactionCategoryId { get; set; }
 
+        public string TransactionCategoryName { get; set; }
+
         public double LimitAmount { get; set; }
 
         public double SpentAmount { get; set; }
