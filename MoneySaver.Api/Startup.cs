@@ -38,8 +38,10 @@ namespace MoneySaver.Api
             services.AddControllers();
             services.AddAutoMapper(typeof(Startup));
             services.AddScoped<UserPackage>();
+            services.AddScoped<IReportsService, ReportsService>();
             services.AddCors(options =>
             {
+                //TODO: Change the CORS policy
                 options.AddPolicy("Open", builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
             });
             services.AddControllers();

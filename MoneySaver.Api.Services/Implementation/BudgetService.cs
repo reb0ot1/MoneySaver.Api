@@ -112,6 +112,7 @@ namespace MoneySaver.Api.Services.Implementation
                 {
                     Id = item.budgetItem.Id,
                     TransactionCategoryId = item.trans.TransactionCategoryId,
+                    TransactionCategoryName = item.trans.Name,
                     LimitAmount = item.budgetItem.LimitAmount,
                     SpentAmount = transactions.
                         Where(w => w.TransactionCategoryId == item.budgetItem.TransactionCategoryId)
