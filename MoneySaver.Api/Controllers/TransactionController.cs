@@ -57,10 +57,10 @@ namespace MoneySaver.Api.Controllers
             return this.Ok(result);
         }
 
-        [HttpDelete]
-        public async Task<IActionResult> RemoveTransaction(Guid transactionId)
+        [HttpGet("remove/{id}")]
+        public async Task<IActionResult> RemoveTransaction(Guid id)
         {
-            await this.transactionService.RemoveTransactionAsync(transactionId);
+            await this.transactionService.RemoveTransactionAsync(id);
 
             return this.Ok();
         }

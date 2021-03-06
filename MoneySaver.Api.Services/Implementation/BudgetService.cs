@@ -102,7 +102,10 @@ namespace MoneySaver.Api.Services.Implementation
 
             var transactions = await this.transactionRepository
                 .GetAll()
-                .Where(w => transactionCategoryIds.Contains(w.TransactionCategoryId) && w.TransactionDate >= firstDayOfTheMonth && w.TransactionDate <= lastDayOfTheMonth)
+                .Where(w => !w.IsDeleted && 
+                            transactionCategoryIds.Contains(w.TransactionCategoryId) && 
+                            w.TransactionDate >= firstDayOfTheMonth && 
+                            w.TransactionDate <= lastDayOfTheMonth)
                 .ToListAsync();
 
             List<BudgetItemModel> budgetItems = new List<BudgetItemModel>();
