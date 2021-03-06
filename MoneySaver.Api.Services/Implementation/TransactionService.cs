@@ -53,6 +53,7 @@ namespace MoneySaver.Api.Services.Implementation
             {
                 List<TransactionModel> transactionModels = await this.transactionRepository
                     .GetAll()
+                    .Where(t => !t.IsDeleted)
                     .Select(m => mapper.Map<TransactionModel>(m))
                     .ToListAsync();
 
