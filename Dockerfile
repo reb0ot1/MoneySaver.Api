@@ -1,18 +1,20 @@
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-buster-slim AS base
+FROM mcr.microsoft.com/dotnet/aspnet:3.1 AS base
 WORKDIR /app
 
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
-WORKDIR /src
-COPY ["MoneySaver.Api/MoneySaver.Api/MoneySaver.Api.csproj", "MoneySaver.Api/"]
-COPY ["MoneySaver.Api/MoneySaver.Api.Data/MoneySaver.Api.Data.csproj", "MoneySaver.Api.Data/"]
-COPY ["MoneySaver.Api/MoneySaver.Api.Services/MoneySaver.Api.Services.csproj", "MoneySaver.Api.Services/"]
-COPY ["MoneySaver.Api/MoneySaver.Api.Models/MoneySaver.Api.Models.csproj", "MoneySaver.Api.Models/"]
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_URLS=https://+;http://+&quot
+ENV ASPNETCORE_Kestrel__Certificates__Default__Password=awdzs123
+ENV ASPNETCORE_Kestrel__Certificates__Default__Path=/https/localhost.pfx
+
+FROM mcr.microsoft.com/dotnet/sdk:3.1 AS build
+WORKDIR /usr/src
+COPY ["MoneySaver.Api/MoneySaver.Api.csproj", "MoneySaver.Api/"]
+COPY ["MoneySaver.Api.Data/MoneySaver.Api.Data.csproj", "MoneySaver.Api.Data/"]
+COPY ["MoneySaver.Api.Models/MoneySaver.Api.Models.csproj", "MoneySaver.Api.Models/"]
+COPY ["MoneySaver.Api.Services/MoneySaver.Api.Services.csproj", "MoneySaver.Api.Services/"]
 RUN dotnet restore "MoneySaver.Api/MoneySaver.Api.csproj"
-COPY ["MoneySaver.Api/MoneySaver.Api/.", "MoneySaver.Api/"]
-COPY ["MoneySaver.Api/MoneySaver.Api.Data/.", "MoneySaver.Api.Data/"]
-COPY ["MoneySaver.Api/MoneySaver.Api.Services/.", "MoneySaver.Api.Services/"]
-COPY ["MoneySaver.Api/MoneySaver.Api.Models/.", "MoneySaver.Api.Models/"]
-WORKDIR "/src/MoneySaver.Api"
+COPY . .
+WORKDIR "/usr/src/MoneySaver.Api"
 RUN dotnet build "MoneySaver.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
@@ -25,3 +27,4 @@ COPY ["testcert/RootCA.crt", "/usr/local/share/ca-certificates/RootCA.crt"]
 RUN update-ca-certificates
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "MoneySaver.Api.dll"]
+ 

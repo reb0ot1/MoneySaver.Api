@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MoneySaver.Api.Data;
 using MoneySaver.Api.Data.Repositories;
 using MoneySaver.Api.Models;
@@ -18,72 +19,96 @@ namespace MoneySaver.Api.Services.Implementation
         private IRepository<Transaction> transactionRepository;
         private IMapper mapper;
         private IRepository<TransactionCategory> transactionCategory;
+        private ILogger<BudgetService> logger;
+        private UserPackage userPackage;
 
         public BudgetService(
             IRepository<Budget> budgetRepository, 
             IRepository<BudgetItem> budgetItemRepository, 
             IRepository<TransactionCategory> transactionCategory,
             IRepository<Transaction> transactionRepository,
-            IMapper mapper)
+            IMapper mapper,
+            ILogger<BudgetService> logger,
+            UserPackage userPackage)
         {
             this.budgetRepository = budgetRepository;
             this.budgetItemRepository = budgetItemRepository;
             this.mapper = mapper;
             this.transactionCategory = transactionCategory;
             this.transactionRepository = transactionRepository;
+            this.logger = logger;
+            this.userPackage = userPackage;
         }
 
         public async Task<BudgetItemModel> AddItemAsync(BudgetItemModel budgetItemModel)
         {
-            BudgetItem budgetItem = mapper.Map<BudgetItem>(budgetItemModel);
-            var result = await this.budgetItemRepository.AddAsync(budgetItem);
-            budgetItemModel.Id = result.Id;
+            try
+            {
+                BudgetItem budgetItem = mapper.Map<BudgetItem>(budgetItemModel);
+                var result = await this.budgetItemRepository.AddAsync(budgetItem);
+                budgetItemModel.Id = result.Id;
 
-            return budgetItemModel;
+                return budgetItemModel;
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, $"Failed to add budget item. UserId {this.userPackage.UserId}", budgetItemModel);
+            }
+
+            return null;
         }
 
         public async Task<BudgetItemModel> EditItemAsync(BudgetItemModel budgetItemModel)
         {
-            var budgetItemEntity = await this.budgetItemRepository
+            try
+            {
+                var budgetItemEntity = await this.budgetItemRepository
                 .GetAll()
                 .AnyAsync(i => i.Id == budgetItemModel.Id);
 
-            if (!budgetItemEntity)
+                if (!budgetItemEntity)
+                {
+                    return null;
+                }
+
+                BudgetItem budgetItem = mapper.Map<BudgetItem>(budgetItemModel);
+                var result = await this.budgetItemRepository.UpdateAsync(budgetItem);
+
+                return budgetItemModel;
+            }
+            catch (Exception ex)
             {
-                return null;
+                this.logger.LogError(ex, $"Failed to edit budget item with id {budgetItemModel.Id}. UserId {this.userPackage.UserId}", budgetItemModel);
             }
 
-            BudgetItem budgetItem = mapper.Map<BudgetItem>(budgetItemModel);
-            var result = await this.budgetItemRepository.UpdateAsync(budgetItem);
-
-            return budgetItemModel;
+            return null;
         }
 
-        public BudgetModel CreateBudget(BudgetModel budgetModel)
-        {
-            Budget budget = mapper.Map<Budget>(budgetModel);
-            this.budgetRepository.AddAsync(budget);
+        //public BudgetModel CreateBudget(BudgetModel budgetModel)
+        //{
+        //    Budget budget = mapper.Map<Budget>(budgetModel);
+        //    this.budgetRepository.AddAsync(budget);
 
-            return budgetModel;
-        }
+        //    return budgetModel;
+        //}
 
-        public List<BudgetModel> GetAllBudgets()
-        {
-            List<BudgetModel> budgetModels = budgetRepository.GetAll().Select(m => mapper.Map<BudgetModel>(m)).ToList();
+        //public List<BudgetModel> GetAllBudgets()
+        //{
+        //    List<BudgetModel> budgetModels = budgetRepository.GetAll().Select(m => mapper.Map<BudgetModel>(m)).ToList();
 
-            return budgetModels;
-        }
+        //    return budgetModels;
+        //}
 
-        public BudgetModel GetBudget(int id)
-        {
-            Budget budget = this.budgetRepository
-                .GetAll()
-                .FirstOrDefault(b => b.Id == id);
+        //public BudgetModel GetBudget(int id)
+        //{
+        //    Budget budget = this.budgetRepository
+        //        .GetAll()
+        //        .FirstOrDefault(b => b.Id == id);
 
-            BudgetModel budgetModel = mapper.Map<BudgetModel>(budget);
+        //    BudgetModel budgetModel = mapper.Map<BudgetModel>(budget);
 
-            return budgetModel;
-        }
+        //    return budgetModel;
+        //}
 
         public async Task<BudgetModel> GetBudgetItems(Models.BudgetType budgetType)
         {
@@ -139,21 +164,21 @@ namespace MoneySaver.Api.Services.Implementation
             return budgetModel;
         }
 
-        public void RemoveBudget(int id)
-        {
-            Budget budget = this.budgetRepository.GetAll().FirstOrDefault(b => b.Id == id);
-            budget.IsDeleted = true;
-            budget.DeletedOnUtc = DateTime.UtcNow;
-            this.budgetRepository.RemoveAsync(budget);
-        }
+        //public void RemoveBudget(int id)
+        //{
+        //    Budget budget = this.budgetRepository.GetAll().FirstOrDefault(b => b.Id == id);
+        //    budget.IsDeleted = true;
+        //    budget.DeletedOnUtc = DateTime.UtcNow;
+        //    this.budgetRepository.RemoveAsync(budget);
+        //}
 
-        public BudgetModel UpdateBudget(BudgetModel budgetModel)
-        {
-            Budget budget = mapper.Map<Budget>(budgetModel);
-            this.budgetRepository.UpdateAsync(budget);
+        //public BudgetModel UpdateBudget(BudgetModel budgetModel)
+        //{
+        //    Budget budget = mapper.Map<Budget>(budgetModel);
+        //    this.budgetRepository.UpdateAsync(budget);
 
-            return budgetModel;
-        }
+        //    return budgetModel;
+        //}
 
         public async Task RemoveItemAsync(int id)
         {

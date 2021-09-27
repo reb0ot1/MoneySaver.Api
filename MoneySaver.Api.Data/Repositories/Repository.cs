@@ -30,7 +30,9 @@ namespace MoneySaver.Api.Data.Repositories
 
         public IQueryable<TEntity> GetAll()
         {
-            var collection = this.databaseContext.Set<TEntity>();
+            var collection = this.databaseContext
+                .Set<TEntity>()
+                .Where(w => w.UserId == this.userPackage.UserId);
 
             return collection;
         }

@@ -18,7 +18,7 @@ namespace MoneySaver.Api.Controllers
             this.logger = logger;
             this.budgetService = budgetService;
         }
-         
+        
         [HttpGet("items")]
         public async Task<IActionResult> GetBudgetItemsAsync()
         {
@@ -53,34 +53,34 @@ namespace MoneySaver.Api.Controllers
             return this.Ok();
         }
 
-        [HttpGet]
-        public IActionResult GetAll()
-        {
-            return this.Ok(this.budgetService.GetAllBudgets());
-        }
+        //[HttpGet]
+        //public IActionResult GetAll()
+        //{
+        //    return this.Ok(this.budgetService.GetAllBudgets());
+        //}
 
-        [HttpGet("{budgetId}")]
-        public IActionResult GetBudget(int budgetId)
-        {
-            return this.Ok(this.budgetService.GetBudget(budgetId));
-        }
+        //[HttpGet("{budgetId}")]
+        //public IActionResult GetBudget(int budgetId)
+        //{
+        //    return this.Ok(this.budgetService.GetBudget(budgetId));
+        //}
 
-        [HttpPut]
-        public IActionResult UpdateBudget(BudgetModel budgetModel)
-        {
-            return this.Ok(this.budgetService.UpdateBudget(budgetModel));
-        }
+        //[HttpPut]
+        //public IActionResult UpdateBudget(BudgetModel budgetModel)
+        //{
+        //    return this.Ok(this.budgetService.UpdateBudget(budgetModel));
+        //}
 
-        [HttpPost]
-        public IActionResult CreateBudget(BudgetModel budgetModel)
-        {
-            return this.Ok(this.budgetService.CreateBudget(budgetModel));
-        }
+        //[HttpPost]
+        //public IActionResult CreateBudget(BudgetModel budgetModel)
+        //{
+        //    return this.Ok(this.budgetService.CreateBudget(budgetModel));
+        //}
 
-        [HttpDelete]
-        public void RemoveBudget(int budgetId)
-        {
-            this.budgetService.RemoveBudget(budgetId);
-        }
+        //[HttpDelete]
+        //public void RemoveBudget(int budgetId)
+        //{
+        //    this.budgetService.RemoveBudget(budgetId);
+        //}
     }
 }

@@ -17,15 +17,18 @@ namespace MoneySaver.Api.Services.Implementation
         private readonly IRepository<TransactionCategory> categoryRepository;
         private readonly IMapper mapper;
         private readonly ILogger<TransactionCategoryService> logger;
+        private readonly UserPackage userPackage;
 
         public TransactionCategoryService(
             ILogger<TransactionCategoryService> logger,
             IRepository<TransactionCategory> categoryRepository,
-            IMapper mapper)
+            IMapper mapper,
+            UserPackage userPackage)
         {
             this.categoryRepository = categoryRepository;
             this.mapper = mapper;
             this.logger = logger;
+            this.userPackage = userPackage;
         }
 
         public async Task<TransactionCategoryModel> CreateCategoryAsync(TransactionCategoryModel categoryModel)
@@ -41,8 +44,7 @@ namespace MoneySaver.Api.Services.Implementation
 
             catch (Exception ex)
             {
-                //TODO Log Exception
-                ;
+                this.logger.LogError(ex, $"Failed to create new category. UserId {this.userPackage.UserId}.", categoryModel);
             }
 
             return null;
@@ -63,7 +65,7 @@ namespace MoneySaver.Api.Services.Implementation
             }
             catch (Exception ex)
             {
-                ;
+                this.logger.LogError(ex, $"Failed to gather categories. UserId {this.userPackage.UserId}.");
             }
 
             return null;
@@ -86,7 +88,7 @@ namespace MoneySaver.Api.Services.Implementation
 
             catch (Exception ex)
             {
-               ;
+                this.logger.LogError(ex, $"Failed to get category with id {id}. UserId {this.userPackage.UserId}.");
             }
 
             return null;
@@ -107,7 +109,7 @@ namespace MoneySaver.Api.Services.Implementation
 
             catch (Exception ex)
             {
-                ;
+                this.logger.LogError(ex, $"Failed to remove category with id {id}. UserId {this.userPackage.UserId}.");
             }
         }
 
@@ -123,7 +125,7 @@ namespace MoneySaver.Api.Services.Implementation
 
             catch (Exception ex)
             {
-                ;
+                this.logger.LogError(ex, $"Failed to update category. UserId {this.userPackage.UserId}.", categoryModel);
             }
 
             return null;

@@ -10,6 +10,7 @@ WORKDIR /src
 COPY ["MoneySaver.Api/MoneySaver.Api/MoneySaver.Api.csproj", "MoneySaver.Api/MoneySaver.Api/"]
 COPY ["MoneySaver.Api/MoneySaver.Api.Services/MoneySaver.Api.Services.csproj", "MoneySaver.Api/MoneySaver.Api.Services/"]
 COPY ["MoneySaver.Api/MoneySaver.Api.Data/MoneySaver.Api.Data.csproj", "MoneySaver.Api/MoneySaver.Api.Data/"]
+COPY ["MoneySaver.Api/MoneySaver.Api.Models/MoneySaver.Api.Models.csproj", "MoneySaver.Api/MoneySaver.Api.Models/"]
 RUN dotnet restore "MoneySaver.Api/MoneySaver.Api/MoneySaver.Api.csproj"
 COPY . .
 WORKDIR "/src/MoneySaver.Api/MoneySaver.Api"

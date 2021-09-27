@@ -18,15 +18,18 @@ namespace MoneySaver.Api.Services.Implementation
         private readonly IRepository<Transaction> transactionRepository;
         private readonly IMapper mapper;
         private readonly ILogger<TransactionService> logger;
+        private readonly UserPackage userPackage;
 
         public TransactionService(
             IRepository<Transaction> transactionRepository, 
             IMapper mapper, 
-            ILogger<TransactionService> logger)
+            ILogger<TransactionService> logger,
+            UserPackage userPackage)
         {
             this.transactionRepository = transactionRepository;
             this.mapper = mapper;
             this.logger = logger;
+            this.userPackage = userPackage;
         }
 
         public async Task<TransactionModel> CreateTransactionAsync(TransactionModel transactionModel)
@@ -38,9 +41,9 @@ namespace MoneySaver.Api.Services.Implementation
 
                 return transactionModel;
             }
-            catch
+            catch(Exception ex)
             {
-                ;
+                this.logger.LogError(ex, $"Failed to create transaction. UserId {this.userPackage.UserId}", transactionModel);
             }
 
             return null;
@@ -48,7 +51,6 @@ namespace MoneySaver.Api.Services.Implementation
 
         public async Task<IEnumerable<TransactionModel>> GetAllTransactionsAsync()
         {
-            this.logger.LogInformation("Getting all transactions");
             try
             {
                 List<TransactionModel> transactionModels = await this.transactionRepository
@@ -59,9 +61,9 @@ namespace MoneySaver.Api.Services.Implementation
 
                 return transactionModels;
             }
-            catch
+            catch(Exception ex)
             {
-                ;
+                this.logger.LogError(ex, $"Failed to gather transactions. UserId {this.userPackage.UserId}");
             }
 
             return null;
@@ -76,9 +78,9 @@ namespace MoneySaver.Api.Services.Implementation
 
                 return transactionModel;
             }
-            catch
+            catch(Exception ex)
             {
-                ;
+                this.logger.LogError(ex, $"Failed to get transaction with id {id}. UserId {this.userPackage.UserId}");
             }
 
             return null;
@@ -93,9 +95,12 @@ namespace MoneySaver.Api.Services.Implementation
 
                 return transactionModel;
             }
-            catch
+            catch (Exception ex)
             {
-                ;
+                this.logger.LogError(
+                    ex, 
+                    $"Failed to update transaction with id {transactionModel.Id}. UserId {this.userPackage.UserId}", 
+                    transactionModel);
             }
 
             return null;
@@ -113,9 +118,12 @@ namespace MoneySaver.Api.Services.Implementation
                 transaction.DeletedOnUtc = DateTime.UtcNow;
                 await this.transactionRepository.RemoveAsync(transaction);
             }
-            catch
+            catch (Exception ex)
             {
-                ;
+                this.logger.LogError(
+                    ex,
+                    $"Failed to remove transaction with id {id}. UserId {this.userPackage.UserId}"
+                    );
             }
         }
 
