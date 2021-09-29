@@ -110,51 +110,54 @@ namespace MoneySaver.Api.Services.Implementation
         //    return budgetModel;
         //}
 
+        //TODO: Add filter object in the parametters
         public async Task<BudgetModel> GetBudgetItems(Models.BudgetType budgetType)
         {
-            //TODO: Add filtration by user id
+            //TODO: Think a better way to get the budget items and their transactions
             var query = from budgetItem in this.budgetItemRepository.GetAll().Where(e => !e.IsDeleted)
-                        join trans in this.transactionCategory.GetAll()
+                        join trans in this.transactionCategory.GetAll().Where(e => !e.IsDeleted)
                             on budgetItem.TransactionCategoryId equals trans.TransactionCategoryId
                         select new { budgetItem, trans };
 
             var result = await query.ToListAsync();
             var transactionCategoryIds = result.Select(s => s.trans.TransactionCategoryId);
-            //var categoryIds = budgetItems.Select(s => s.TransactionCategoryId);
             var now = DateTime.UtcNow;
             var firstDayOfTheMonth = new DateTime(now.Year, now.Month, 1);
             var lastDayOfTheMonth = firstDayOfTheMonth.AddMonths(1).AddDays(-1);
 
             var transactions = await this.transactionRepository
                 .GetAll()
-                .Where(w => !w.IsDeleted && 
-                            transactionCategoryIds.Contains(w.TransactionCategoryId) && 
-                            w.TransactionDate >= firstDayOfTheMonth && 
+                .Where(w => !w.IsDeleted &&
+                            w.TransactionDate >= firstDayOfTheMonth &&
                             w.TransactionDate <= lastDayOfTheMonth)
+                .Select(s => new { TransactionCategoryId = s.TransactionCategoryId, Amount = s.Amount })
                 .ToListAsync();
 
             List<BudgetItemModel> budgetItems = new List<BudgetItemModel>();
             foreach (var item in result)
             {
+                var spentAmmount = transactions
+                        .Where(w => w.TransactionCategoryId == item.budgetItem.TransactionCategoryId)
+                        .Select(s => s.Amount)
+                        .Sum(m => m);
+
                 var budgetItemModel = new BudgetItemModel
                 {
                     Id = item.budgetItem.Id,
                     TransactionCategoryId = item.trans.TransactionCategoryId,
                     TransactionCategoryName = item.trans.Name,
                     LimitAmount = item.budgetItem.LimitAmount,
-                    SpentAmount = transactions.
-                        Where(w => w.TransactionCategoryId == item.budgetItem.TransactionCategoryId)
-                        .Sum(s => s.Amount)
+                    SpentAmount = spentAmmount
                 };
 
                 budgetItemModel.CalculateProgress();
 
                 budgetItems.Add(budgetItemModel);
-            }
+            };
 
             var budgetModel = new BudgetModel
             {
-                BudgetItems = budgetItems,
+                BudgetItems = budgetItems.OrderBy(o => o.TransactionCategoryName).ToList(),
                 LimitAmount = budgetItems.Sum(s => s.LimitAmount),
                 TotalSpentAmmount = budgetItems.Sum(s => s.SpentAmount),
             };
