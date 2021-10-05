@@ -10,13 +10,16 @@ namespace MoneySaver.Api.Data.Repositories
     {
         protected MoneySaverApiContext databaseContext;
         private readonly UserPackage userPackage;
+        private readonly ILogger<Repository<TEntity>> logger;
 
         public Repository(
             MoneySaverApiContext context, 
-            UserPackage userPackage)
+            UserPackage userPackage,
+            ILogger<Repository<TEntity>> logger)
         {
             this.databaseContext = context;
             this.userPackage = userPackage;
+            this.logger = logger;
         }
 
         public async Task<TEntity> AddAsync(TEntity entity)
@@ -29,7 +32,7 @@ namespace MoneySaver.Api.Data.Repositories
         }
 
         public IQueryable<TEntity> GetAll()
-        {
+        { 
             var collection = this.databaseContext
                 .Set<TEntity>()
                 .Where(w => w.UserId == this.userPackage.UserId);
@@ -39,23 +42,43 @@ namespace MoneySaver.Api.Data.Repositories
 
         public async Task<TEntity> UpdateAsync(TEntity entity)
         {
-            entity.UserId = this.userPackage.UserId;
+            if (entity.UserId != this.userPackage.UserId)
+            {
+                this.logger
+                    .LogError($"Forbbiden operation from user id {this.userPackage.UserId} to an entity which is property to user id {entity.UserId}");
+                throw new System.Exception($"Forbbiden operation from user id {this.userPackage.UserId} to an entity which is property to user id {entity.UserId}");
+            }
+
             this.databaseContext.Update(entity);
             await this.databaseContext.SaveChangesAsync();
 
             return entity;
         }
 
-        public async Task RemoveAsync(TEntity entity)
+        public async Task SetAsDeletedAsync(TEntity entity)
         {
-            //TODO: Should have entities which can be deleted from the database and such which will  but with IsDeleted flag set true
-            //this.databaseContext.Remove(entity);
             if (entity.UserId != this.userPackage.UserId)
             {
+                this.logger
+                    .LogError($"Forbbiden operation from user id {this.userPackage.UserId} to an entity which is property to user id {entity.UserId}");
                 return;
             }
 
             this.databaseContext.Update(entity);
+
+            await this.databaseContext.SaveChangesAsync();
+        }
+
+        public async Task RemoveAsync(TEntity entity)
+        {
+            if (entity.UserId != this.userPackage.UserId)
+            {
+                this.logger
+                    .LogError($"Forbbiden operation from user id {this.userPackage.UserId} to an entity which is property to user id {entity.UserId}");
+                return;
+            }
+
+            this.databaseContext.Remove(entity);
 
             await this.databaseContext.SaveChangesAsync();
         }

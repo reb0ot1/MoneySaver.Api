@@ -87,11 +87,34 @@ namespace MoneySaver.Api.Services.Implementation
         }
 
         public async Task<TransactionModel> UpdateTransactionAsync(TransactionModel transactionModel)
-        {
+       {
+            //TODO: validate the request model values
             try
             {
-                Transaction transaction = mapper.Map<Transaction>(transactionModel);
-                await this.transactionRepository.UpdateAsync(transaction);
+                Guid validId;
+                if (!Guid.TryParse(transactionModel.Id, out validId))
+                {
+                    this.logger.LogWarning($"Not a valid transaction id. [{transactionModel.Id}]");
+                    return null;
+                }
+
+                Transaction transactionEntity = await this
+                    .transactionRepository
+                    .GetAll()
+                    .FirstOrDefaultAsync(e => e.Id == validId);
+
+                if (transactionEntity == null)
+                {
+                    this.logger.LogWarning($"No such entity found for update. id [{transactionModel.Id}]");
+                    return null;
+                }
+                
+                transactionEntity.AdditionalNote = transactionModel.AdditionalNote;
+                transactionEntity.Amount = transactionModel.Amount;
+                transactionEntity.TransactionCategoryId = transactionModel.TransactionCategoryId;
+                transactionEntity.TransactionDate = transactionModel.TransactionDate;
+
+                await this.transactionRepository.UpdateAsync(transactionEntity);
 
                 return transactionModel;
             }
@@ -116,7 +139,7 @@ namespace MoneySaver.Api.Services.Implementation
 
                 transaction.IsDeleted = true;
                 transaction.DeletedOnUtc = DateTime.UtcNow;
-                await this.transactionRepository.RemoveAsync(transaction);
+                await this.transactionRepository.SetAsDeletedAsync(transaction);
             }
             catch (Exception ex)
             {

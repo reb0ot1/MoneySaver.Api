@@ -104,7 +104,7 @@ namespace MoneySaver.Api.Services.Implementation
 
                 transactionCategory.IsDeleted = true;
                 transactionCategory.DeletedOnUtc = DateTime.UtcNow;
-                await this.categoryRepository.RemoveAsync(transactionCategory);
+                await this.categoryRepository.SetAsDeletedAsync(transactionCategory);
             }
 
             catch (Exception ex)

@@ -60,19 +60,22 @@ namespace MoneySaver.Api.Services.Implementation
 
         public async Task<BudgetItemModel> EditItemAsync(BudgetItemModel budgetItemModel)
         {
+            //TODO: validate the request model values
             try
             {
                 var budgetItemEntity = await this.budgetItemRepository
                 .GetAll()
-                .AnyAsync(i => i.Id == budgetItemModel.Id);
+                .FirstOrDefaultAsync(i => i.Id == budgetItemModel.Id);
 
-                if (!budgetItemEntity)
+                if (budgetItemEntity == null)
                 {
                     return null;
                 }
 
-                BudgetItem budgetItem = mapper.Map<BudgetItem>(budgetItemModel);
-                var result = await this.budgetItemRepository.UpdateAsync(budgetItem);
+                budgetItemEntity.LimitAmount = budgetItemModel.LimitAmount;
+                budgetItemEntity.TransactionCategoryId = budgetItemModel.TransactionCategoryId;
+
+                var result = await this.budgetItemRepository.UpdateAsync(budgetItemEntity);
 
                 return budgetItemModel;
             }
@@ -187,7 +190,7 @@ namespace MoneySaver.Api.Services.Implementation
         {
             BudgetItem item = this.budgetItemRepository.GetAll().FirstOrDefault(i => i.Id == id);
             item.IsDeleted = true;
-            await this.budgetItemRepository.RemoveAsync(item);
+            await this.budgetItemRepository.SetAsDeletedAsync(item);
         }
     }
 }
