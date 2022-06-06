@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MoneySaver.Api.Models;
+using MoneySaver.Api.Models.Request;
+using MoneySaver.Api.Models.Response;
 using MoneySaver.Api.Services.Contracts;
 using System;
 using System.Collections.Generic;
@@ -29,6 +31,14 @@ namespace MoneySaver.Api.Controllers
         public async Task<IActionResult> GetAllTransactions()
         {
             IEnumerable<TransactionModel> result = await this.transactionService.GetAllTransactionsAsync();
+
+            return this.Ok(result);
+        }
+
+        [HttpPost("page")]
+        public async Task<IActionResult> GetTransactionsPerPage(PageRequest page)
+        {
+            PageModel<TransactionModel> result = await this.transactionService.GetTransactionsForPageAsync(page);
 
             return this.Ok(result);
         }

@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using MoneySaver.Api.Data;
 using MoneySaver.Api.Data.Repositories;
 using MoneySaver.Api.Models;
+using MoneySaver.Api.Models.Request;
+using MoneySaver.Api.Models.Response;
 using MoneySaver.Api.Services.Contracts;
 using System;
 using System.Collections.Generic;
@@ -37,8 +39,8 @@ namespace MoneySaver.Api.Services.Implementation
             try
             {
                 Transaction transaction = mapper.Map<Transaction>(transactionModel);
-                await this.transactionRepository.AddAsync(transaction);
-
+                var result = await this.transactionRepository.AddAsync(transaction);
+                transactionModel.Id = result.Id.ToString();
                 return transactionModel;
             }
             catch(Exception ex)
@@ -67,6 +69,42 @@ namespace MoneySaver.Api.Services.Implementation
             }
 
             return null;
+        }
+
+        public async Task<PageModel<TransactionModel>> GetTransactionsForPageAsync(PageRequest pageRequest)
+        {
+            try
+            {
+                int total = await this.transactionRepository
+                    .GetAll()
+                    .Where(t => !t.IsDeleted)
+                    .CountAsync();
+
+                List<TransactionModel> transactionModels = await this.transactionRepository
+                        .GetAll()
+                        .Where(t => !t.IsDeleted)
+                        .OrderByDescending(tr => tr.TransactionDate)
+                        .Skip(pageRequest.ItemsToSkip)
+                        .Take(pageRequest.ItemsPerPage)
+                        .Select(m => mapper.Map<TransactionModel>(m))
+                        .ToListAsync();
+
+                return new PageModel<TransactionModel>()
+                {
+                    Result = transactionModels,
+                    TotalCount = total
+                };
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, $"Failed to get the transactions for the requested page. UserId [{this.userPackage.UserId}]");
+            }
+            
+            return new PageModel<TransactionModel>
+            {
+                Result = new List<TransactionModel>(),
+                TotalCount = 0
+            };
         }
 
         public async Task<TransactionModel> GetTransactionAsync(Guid id)
@@ -149,6 +187,5 @@ namespace MoneySaver.Api.Services.Implementation
                     );
             }
         }
-
     }
 }

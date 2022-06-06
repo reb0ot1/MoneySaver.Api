@@ -10,5 +10,7 @@ namespace MoneySaver.Api.Services.Contracts
     public interface IReportsService
     {
         Task<List<DataItem>> GetExpensesPerCategoryAsync(FilterModel filter);
+
+        Task<LineChartData> GetExpensesByPeriod();
     }
 }

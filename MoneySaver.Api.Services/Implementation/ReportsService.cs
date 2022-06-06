@@ -34,11 +34,64 @@ namespace MoneySaver.Api.Services.Implementation
             this.userPackage = userPackage;
         }
 
+        //TODO: Add filter parameter
+        public async Task<LineChartData> GetExpensesByPeriod()
+        {
+            var dateTime = DateTime.UtcNow;
+            var fromTime = dateTime.AddMonths(-11);
+            var testDateTime = dateTime.AddMonths(-11);
+            var allPeriods = new List<string>();
+            while (testDateTime <= dateTime)
+            {
+                allPeriods.Add($"{testDateTime.Month}/{testDateTime.Year}");
+                testDateTime = testDateTime.AddMonths(1);
+            }
+            var dataContainer = new LineChartData { Categories = allPeriods.ToArray(), Series = new List<SeriesItem>()};
+            dataContainer.Series.Add(new SeriesItem { Name = "Spent ammount", Data = new double?[allPeriods.Count] });
+
+            try
+            {
+                var ll = await this.transactionRepository
+                    .GetAll()
+                    .Where(e => !e.IsDeleted)
+                    .GroupBy(o => new {
+                        Month = o.TransactionDate.Month,
+                        Year = o.TransactionDate.Year
+                    })
+                    .Select(g => new {
+                        Id = string.Format("{0}/{1}", g.Key.Month, g.Key.Year),
+                        Amount = g.Sum(a => a.Amount)
+                    })
+                    .ToListAsync();
+
+                for (int i = 0; i < allPeriods.Count; i++)
+                {
+                    var findPeriod = ll.FirstOrDefault(e => e.Id == allPeriods[i]);
+                    if (findPeriod != null)
+                    {
+                        dataContainer.Series.First().Data[i] = findPeriod.Amount;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, $"Something went wrong when trying to get expenses by period. UserId [{this.userPackage.UserId}]");
+            }
+
+            return dataContainer;
+        }
+
         public async Task<List<DataItem>> GetExpensesPerCategoryAsync(FilterModel filter)
         {
             var dataItems = new List<DataItem>();
             try
             {
+                var categories = await this.transactionCategoryRepository
+                    .GetAll()
+                    .Where(ct => !ct.IsDeleted && !ct.ParentId.HasValue)
+                    .Select(e => new { Id = e.TransactionCategoryId, Name = e.Name})
+                    .ToArrayAsync();
+
                 var query = from transactionItem in this.transactionRepository.GetAll()
                         .Where(e => !e.IsDeleted && e.TransactionDate >= filter.From && e.TransactionDate <= filter.To)
                             join transCategory in this.transactionCategoryRepository.GetAll()
@@ -50,9 +103,17 @@ namespace MoneySaver.Api.Services.Implementation
                 var groupTransactionTypes = result.GroupBy(gr => gr.transactionItem.TransactionCategoryId);
                 foreach (var group in groupTransactionTypes)
                 {
+                    var firstGroupElem = group.First().transCategory;
+                    var name = firstGroupElem.Name;
+
+                    if (firstGroupElem.ParentId != null)
+                    {
+                        var parrentName = categories.FirstOrDefault(e => e.Id == firstGroupElem.ParentId);
+                        name = $"{parrentName.Name}, {firstGroupElem.Name}";
+                    }
                     var dataItem = new DataItem
                     {
-                        Name = group.First().transCategory.Name,
+                        Name = name,
                         Amount = group.Sum(gr => gr.transactionItem.Amount),
                         Y = (group.Sum(gr => gr.transactionItem.Amount) / totalSum) * 100
                     };

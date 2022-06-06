@@ -21,8 +21,15 @@ namespace MoneySaver.Api.Middlewares
         {
             if (httpContext.User.Identity is ClaimsIdentity identity)
             {
-                userPackage.UserId = identity.FindFirst("sub")?.Value;
+                var userId = identity.FindFirst("sub")?.Value;
+                if (userId == null)
+                {
+                    userId = identity.FindFirst("nameid")?.Value;
+                }
+
+                userPackage.UserId = userId;
             }
+
             await this._next(httpContext);
         }
     }

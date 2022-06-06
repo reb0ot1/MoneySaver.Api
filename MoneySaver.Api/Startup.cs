@@ -12,6 +12,7 @@ using MoneySaver.Api.Middlewares;
 using MoneySaver.Api.Models;
 using MoneySaver.Api.Services.Contracts;
 using MoneySaver.Api.Services.Implementation;
+using MoneySaver.System.Infrastructure;
 using System.IdentityModel.Tokens.Jwt;
 
 namespace MoneySaver.Api
@@ -29,8 +30,11 @@ namespace MoneySaver.Api
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton(Configuration.GetSection(nameof(Authority)).Get<Authority>());
-            services.AddDbContext<MoneySaverApiContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            services.AddWebService<MoneySaverApiContext>(Configuration);
+            services.AddHealthChecks();
+            //services.AddDbContext<MoneySaverApiContext>(options =>
+            //    options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<ITransactionCategoryService, TransactionCategoryService>();
@@ -46,17 +50,13 @@ namespace MoneySaver.Api
             });
             services.AddControllers();
 
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
-                {
-                    options.Authority = Configuration["Authority:Url"];
-                    options.Audience = Configuration["Authority:Audiance"];
-                    //options.TokenValidationParameters = new TokenValidationParameters()
-                    //{
-                    //    NameClaimType = "name"
-                    //};
-                });
+            
+            //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            //    .AddJwtBearer(options =>
+            //    {
+            //        options.Authority = Configuration["Authority:Url"];
+            //        options.Audience = Configuration["Authority:Audiance"];
+            //    });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -68,6 +68,7 @@ namespace MoneySaver.Api
             }
 
             app.UseCors("Open");
+            app.UseHealthChecks("/health");
             //app.UseHttpsRedirection();
             app.UseRouting();
             app.UseAuthentication();
