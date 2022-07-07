@@ -4,6 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>..\MoneySaver.Client</DockerfileContext>
+    <UserSecretsId>ddfef9cb-1cc1-4ebb-951e-6dbff1710586</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,7 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MoneySaver.Api.Services\MoneySaver.Api.Services.csproj" />
-    <ProjectReference Include="..\..\MoneySaver.System\MoneySaver.System.csproj" />
+    <ProjectReference Include="..\MoneySaver.System\MoneySaver.System.csproj" />
   </ItemGroup>
 
 

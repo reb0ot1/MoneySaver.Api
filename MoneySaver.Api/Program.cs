@@ -21,9 +21,9 @@ namespace MoneySaver.Api
             //    .AddJsonFile("appsettings.json")
             //    .Build();
 
-            Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(config)
-                .CreateLogger();
+            //Log.Logger = new LoggerConfiguration()
+            //    .ReadFrom.Configuration(config)
+            //    .CreateLogger();
             try
             {
                 Log.Information("Application Starting.");
@@ -42,13 +42,13 @@ namespace MoneySaver.Api
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration((hostingContext, config) => 
+            .ConfigureAppConfiguration((hostingContext, config) =>
                 {
                     config.AddJsonFile("appsettings.json",
                     optional: true,
                     reloadOnChange: true);
                 })
-            .UseSerilog()
+            //.UseSerilog()
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();

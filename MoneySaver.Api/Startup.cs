@@ -1,4 +1,5 @@
 using AutoMapper;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -29,12 +30,10 @@ namespace MoneySaver.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton(Configuration.GetSection(nameof(Authority)).Get<Authority>());
+            //services.AddSingleton(Configuration.GetSection(nameof(Authority)).Get<Authority>());
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             services.AddWebService<MoneySaverApiContext>(Configuration);
             services.AddHealthChecks();
-            //services.AddDbContext<MoneySaverApiContext>(options =>
-            //    options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<ITransactionCategoryService, TransactionCategoryService>();
@@ -68,7 +67,9 @@ namespace MoneySaver.Api
             }
 
             app.UseCors("Open");
-            app.UseHealthChecks("/health");
+            app.UseHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions { 
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
             //app.UseHttpsRedirection();
             app.UseRouting();
             app.UseAuthentication();
