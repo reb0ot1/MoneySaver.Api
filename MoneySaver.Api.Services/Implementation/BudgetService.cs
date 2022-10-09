@@ -126,7 +126,7 @@ namespace MoneySaver.Api.Services.Implementation
             var transactionCategoryIds = result.Select(s => s.trans.TransactionCategoryId);
             var now = DateTime.UtcNow;
             var firstDayOfTheMonth = new DateTime(now.Year, now.Month, 1);
-            var lastDayOfTheMonth = firstDayOfTheMonth.AddMonths(1).AddDays(-1);
+            var lastDayOfTheMonth = firstDayOfTheMonth.AddMonths(1).AddTicks(-1);
 
             var transactions = await this.transactionRepository
                 .GetAll()
