@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using MoneySaver.Api.Models.Filters;
 
 namespace MoneySaver.Api.Models.Request
 {
@@ -10,7 +8,6 @@ namespace MoneySaver.Api.Models.Request
 
         public int ItemsPerPage { get; set; }
 
-        //TODO: Include filter. The below is only for test
-        public string Filter { get; set; }
+        public FilterModel Filter { get; set; }
     }
 }

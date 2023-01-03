@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace MoneySaver.Api.Data.Repositories
 {
     public class Repository<TEntity> : IRepository<TEntity>
-        where TEntity : class, IUser, new()
+        where TEntity : class, IUser, IDeletable, new()
     {
         protected MoneySaverApiContext databaseContext;
         private readonly UserPackage userPackage;
@@ -35,7 +35,7 @@ namespace MoneySaver.Api.Data.Repositories
         { 
             var collection = this.databaseContext
                 .Set<TEntity>()
-                .Where(w => w.UserId == this.userPackage.UserId);
+                .Where(w => w.UserId == this.userPackage.UserId && !w.IsDeleted);
 
             return collection;
         }

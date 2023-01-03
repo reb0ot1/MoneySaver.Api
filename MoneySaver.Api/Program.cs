@@ -17,16 +17,8 @@ namespace MoneySaver.Api
         {
             var host = CreateHostBuilder(args).Build();
             var config = host.Services.GetRequiredService<IConfiguration>();
-            //var config = new ConfigurationBuilder()
-            //    .AddJsonFile("appsettings.json")
-            //    .Build();
-
-            //Log.Logger = new LoggerConfiguration()
-            //    .ReadFrom.Configuration(config)
-            //    .CreateLogger();
             try
             {
-                Log.Information("Application Starting.");
                 host.Run();
             }
             catch (Exception ex)
@@ -48,10 +40,9 @@ namespace MoneySaver.Api
                     optional: true,
                     reloadOnChange: true);
                 })
-            //.UseSerilog()
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.UseStartup<Startup>();
+            });
     }
 }

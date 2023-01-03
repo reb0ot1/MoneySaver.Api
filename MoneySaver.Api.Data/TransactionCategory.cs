@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MoneySaver.Api.Data
 {
-    public class TransactionCategory : IUser
+    public class TransactionCategory : IUser, IDeletable
     {
         [Column("Id")]
         public int TransactionCategoryId { get; set; }

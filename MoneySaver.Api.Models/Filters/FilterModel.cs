@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace MoneySaver.Api.Models.Filters
 {
@@ -9,5 +7,9 @@ namespace MoneySaver.Api.Models.Filters
         public DateTime From { get; set; }
 
         public DateTime To { get; set; }
+
+        public string SearchText { get; set; }
+
+        public int[] CategoryIds { get; set; } = new int[] { };
     }
 }

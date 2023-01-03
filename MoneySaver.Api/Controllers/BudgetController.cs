@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using MoneySaver.Api.Models;
 using MoneySaver.Api.Services.Contracts;
 using System.Threading.Tasks;
@@ -10,12 +9,10 @@ namespace MoneySaver.Api.Controllers
     [ApiController]
     public class BudgetController : Controller
     {
-        private ILogger<BudgetController> logger;
         private IBudgetService budgetService;
 
-        public BudgetController(ILogger<BudgetController> logger, IBudgetService budgetService)
+        public BudgetController(IBudgetService budgetService)
         {
-            this.logger = logger;
             this.budgetService = budgetService;
         }
         
@@ -52,35 +49,5 @@ namespace MoneySaver.Api.Controllers
             await this.budgetService.RemoveItemAsync(id);
             return this.Ok();
         }
-
-        //[HttpGet]
-        //public IActionResult GetAll()
-        //{
-        //    return this.Ok(this.budgetService.GetAllBudgets());
-        //}
-
-        //[HttpGet("{budgetId}")]
-        //public IActionResult GetBudget(int budgetId)
-        //{
-        //    return this.Ok(this.budgetService.GetBudget(budgetId));
-        //}
-
-        //[HttpPut]
-        //public IActionResult UpdateBudget(BudgetModel budgetModel)
-        //{
-        //    return this.Ok(this.budgetService.UpdateBudget(budgetModel));
-        //}
-
-        //[HttpPost]
-        //public IActionResult CreateBudget(BudgetModel budgetModel)
-        //{
-        //    return this.Ok(this.budgetService.CreateBudget(budgetModel));
-        //}
-
-        //[HttpDelete]
-        //public void RemoveBudget(int budgetId)
-        //{
-        //    this.budgetService.RemoveBudget(budgetId);
-        //}
     }
 }

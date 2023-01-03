@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace MoneySaver.Api.Data
 {
-    public class Transaction : IUser
+    public class Transaction : IUser, IDeletable
     {
         public Guid Id { get; set; }
 

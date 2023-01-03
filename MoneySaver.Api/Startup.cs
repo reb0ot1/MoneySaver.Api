@@ -1,9 +1,6 @@
-using AutoMapper;
 using HealthChecks.UI.Client;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,6 +11,7 @@ using MoneySaver.Api.Models;
 using MoneySaver.Api.Services.Contracts;
 using MoneySaver.Api.Services.Implementation;
 using MoneySaver.System.Infrastructure;
+using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 
 namespace MoneySaver.Api
@@ -23,6 +21,9 @@ namespace MoneySaver.Api
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            Log.Logger = new LoggerConfiguration()
+              .ReadFrom.Configuration(this.Configuration)
+              .CreateLogger();
         }
 
         public IConfiguration Configuration { get; }
@@ -32,6 +33,11 @@ namespace MoneySaver.Api
         {
             //services.AddSingleton(Configuration.GetSection(nameof(Authority)).Get<Authority>());
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            services.AddLogging(logging =>
+            {
+                logging.AddSerilog(dispose:true);
+            });
+
             services.AddWebService<MoneySaverApiContext>(Configuration);
             services.AddHealthChecks();
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -47,6 +53,7 @@ namespace MoneySaver.Api
                 //TODO: Change the CORS policy
                 options.AddPolicy("Open", builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
             });
+
             services.AddControllers();
 
             
@@ -70,6 +77,7 @@ namespace MoneySaver.Api
             app.UseHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions { 
                 ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
             });
+
             //app.UseHttpsRedirection();
             app.UseRouting();
             app.UseAuthentication();

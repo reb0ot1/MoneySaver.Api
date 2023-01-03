@@ -32,7 +32,15 @@ namespace MoneySaver.Api.Controllers
         [HttpPost("expensesperiod")]
         public async Task<IActionResult> GetExpensesInPeriod(FilterModel filter)
         {
-            LineChartData result = await this.reportsService.GetExpensesByPeriod();
+            LineChartData result = await this.reportsService.GetExpensesByPeriod(filter);
+
+            return this.Ok(result);
+        }
+
+        [HttpPost("expensesbycategories")]
+        public async Task<IActionResult> GetExpensesForPeriodByCategoriesAsync(FilterModel filter)
+        {
+            LineChartData result = await this.reportsService.GetExpensesForPeriodByCategoriesAsync(filter);
 
             return this.Ok(result);
         }

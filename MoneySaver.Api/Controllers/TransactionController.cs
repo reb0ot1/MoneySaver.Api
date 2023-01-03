@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using MoneySaver.Api.Models;
 using MoneySaver.Api.Models.Request;
 using MoneySaver.Api.Models.Response;
 using MoneySaver.Api.Services.Contracts;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MoneySaver.Api.Controllers
@@ -16,23 +14,11 @@ namespace MoneySaver.Api.Controllers
     [ApiController]
     public class TransactionController : Controller
     {
-        private ILogger<TransactionController> logger;
         private ITransactionService transactionService;
 
-        public TransactionController(
-            ILogger<TransactionController> logger,
-            ITransactionService transactionService)
+        public TransactionController(ITransactionService transactionService)
         {
-            this.logger = logger;
             this.transactionService = transactionService;
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetAllTransactions()
-        {
-            IEnumerable<TransactionModel> result = await this.transactionService.GetAllTransactionsAsync();
-
-            return this.Ok(result);
         }
 
         [HttpPost("page")]

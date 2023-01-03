@@ -2,14 +2,12 @@
 using MoneySaver.Api.Models.Request;
 using MoneySaver.Api.Models.Response;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MoneySaver.Api.Services.Contracts
 {
     public interface ITransactionService
     {
-        Task<IEnumerable<TransactionModel>> GetAllTransactionsAsync();
         Task<PageModel<TransactionModel>> GetTransactionsForPageAsync(PageRequest pageRequest);
         Task<TransactionModel> GetTransactionAsync(Guid id);
         Task<TransactionModel> UpdateTransactionAsync(TransactionModel transaction);

@@ -10,7 +10,6 @@ using MoneySaver.Api.Services.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MoneySaver.Api.Services.Implementation
@@ -18,17 +17,20 @@ namespace MoneySaver.Api.Services.Implementation
     public class TransactionService : ITransactionService
     {
         private readonly IRepository<Transaction> transactionRepository;
+        private readonly IRepository<TransactionCategory> transactionCategoryRepository;
         private readonly IMapper mapper;
         private readonly ILogger<TransactionService> logger;
         private readonly UserPackage userPackage;
 
         public TransactionService(
-            IRepository<Transaction> transactionRepository, 
+            IRepository<Transaction> transactionRepository,
+            IRepository<TransactionCategory> transactionCategoryRepository,
             IMapper mapper, 
             ILogger<TransactionService> logger,
             UserPackage userPackage)
         {
             this.transactionRepository = transactionRepository;
+            this.transactionCategoryRepository = transactionCategoryRepository;
             this.mapper = mapper;
             this.logger = logger;
             this.userPackage = userPackage;
@@ -51,60 +53,38 @@ namespace MoneySaver.Api.Services.Implementation
             return null;
         }
 
-        public async Task<IEnumerable<TransactionModel>> GetAllTransactionsAsync()
-        {
-            try
-            {
-                List<TransactionModel> transactionModels = await this.transactionRepository
-                    .GetAll()
-                    .Where(t => !t.IsDeleted)
-                    .Select(m => mapper.Map<TransactionModel>(m))
-                    .ToListAsync();
-
-                return transactionModels;
-            }
-            catch(Exception ex)
-            {
-                this.logger.LogError(ex, $"Failed to gather transactions. UserId {this.userPackage.UserId}");
-            }
-
-            return null;
-        }
-
         public async Task<PageModel<TransactionModel>> GetTransactionsForPageAsync(PageRequest pageRequest)
         {
+            var result = new PageModel<TransactionModel>();
+
             try
             {
-                int total = await this.transactionRepository
-                    .GetAll()
-                    .Where(t => !t.IsDeleted)
+                var transactionsQuery = this.FilterBySearchContent(this.transactionRepository
+                                                                    .GetAll()
+                                                                    .OrderByDescending(e => e.TransactionDate),
+                                                                   pageRequest.Filter.SearchText);
+
+                var totalRecords = await transactionsQuery
                     .CountAsync();
 
-                List<TransactionModel> transactionModels = await this.transactionRepository
-                        .GetAll()
-                        .Where(t => !t.IsDeleted)
-                        .OrderByDescending(tr => tr.TransactionDate)
+                var transactionsFoundResult = await transactionsQuery
                         .Skip(pageRequest.ItemsToSkip)
                         .Take(pageRequest.ItemsPerPage)
-                        .Select(m => mapper.Map<TransactionModel>(m))
                         .ToListAsync();
 
-                return new PageModel<TransactionModel>()
-                {
-                    Result = transactionModels,
-                    TotalCount = total
-                };
+
+                result.Result = transactionsFoundResult;
+                result.TotalCount = totalRecords;
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, $"Failed to get the transactions for the requested page. UserId [{this.userPackage.UserId}]");
+                this.logger.LogError(
+                    ex, 
+                    $"Failed to get the transactions for the requested page. UserId [{this.userPackage.UserId}]"
+                    );
             }
-            
-            return new PageModel<TransactionModel>
-            {
-                Result = new List<TransactionModel>(),
-                TotalCount = 0
-            };
+
+            return result;
         }
 
         public async Task<TransactionModel> GetTransactionAsync(Guid id)
@@ -125,7 +105,7 @@ namespace MoneySaver.Api.Services.Implementation
         }
 
         public async Task<TransactionModel> UpdateTransactionAsync(TransactionModel transactionModel)
-       {
+        {
             //TODO: validate the request model values
             try
             {
@@ -186,6 +166,36 @@ namespace MoneySaver.Api.Services.Implementation
                     $"Failed to remove transaction with id {id}. UserId {this.userPackage.UserId}"
                     );
             }
+        }
+
+        private IQueryable<TransactionModel> FilterBySearchContent(IQueryable<Transaction> transQuery, string searchText)
+        {
+            if (searchText == null)
+            {
+                return transQuery.Select(e => this.mapper.Map<TransactionModel>(e));
+            }
+
+            return transQuery.Join(this.transactionCategoryRepository.GetAll(),
+                    trans => trans.TransactionCategoryId,
+                    categ => categ.TransactionCategoryId,
+                    (trans, categ) => new
+                    {
+                        TransactionId = trans.Id,
+                        TransactionDate = trans.TransactionDate,
+                        TransactionCategoryId = trans.TransactionCategoryId,
+                        Amount = trans.Amount,
+                        AdditionalNote = trans.AdditionalNote,
+                        CategoryName = categ.Name
+                    })
+                .Where(tr => tr.AdditionalNote.Contains(searchText) || tr.CategoryName == searchText)
+                .Select(e => new TransactionModel
+                {
+                    Id = e.TransactionId.ToString(),
+                    TransactionDate = e.TransactionDate,
+                    AdditionalNote = e.AdditionalNote,
+                    Amount = e.Amount,
+                    TransactionCategoryId = e.TransactionCategoryId
+                });
         }
     }
 }

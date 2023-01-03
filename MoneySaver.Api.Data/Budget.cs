@@ -2,7 +2,7 @@
 
 namespace MoneySaver.Api.Data
 {
-    public class Budget : IUser
+    public class Budget : IUser, IDeletable
     {
         public int Id { get; set; }
         public DateTime CreatedOn { get; set; }

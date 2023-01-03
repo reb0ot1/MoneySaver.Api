@@ -1,8 +1,6 @@
 ﻿using MoneySaver.Api.Models.Filters;
 using MoneySaver.Api.Models.Reports;
-using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MoneySaver.Api.Services.Contracts
@@ -11,6 +9,8 @@ namespace MoneySaver.Api.Services.Contracts
     {
         Task<List<DataItem>> GetExpensesPerCategoryAsync(FilterModel filter);
 
-        Task<LineChartData> GetExpensesByPeriod();
+        Task<LineChartData> GetExpensesByPeriod(FilterModel filter);
+
+        Task<LineChartData> GetExpensesForPeriodByCategoriesAsync(FilterModel filter);
     }
 }
