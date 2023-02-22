@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MoneySaver.Api.Models
+﻿namespace MoneySaver.Api.Models.Budget
 {
     public class BudgetItemModel
     {
@@ -20,7 +16,7 @@ namespace MoneySaver.Api.Models
 
         public void CalculateProgress()
         {
-            this.Progress = 100 - (int)((SpentAmount / LimitAmount) * 100);
+            Progress = 100 - (int)(SpentAmount / LimitAmount * 100);
         }
     }
 }

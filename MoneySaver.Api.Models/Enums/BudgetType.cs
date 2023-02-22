@@ -7,6 +7,7 @@ namespace MoneySaver.Api.Models
     public enum BudgetType
     {
         Weekly,
-        Monthly
+        Monthly,
+        Yearly
     }
 }

@@ -6,10 +6,13 @@ using MoneySaver.Api.Data.Repositories;
 using MoneySaver.Api.Models;
 using MoneySaver.Api.Models.Request;
 using MoneySaver.Api.Models.Response;
+using MoneySaver.Api.Models.Shared;
 using MoneySaver.Api.Services.Contracts;
+using MoneySaver.Api.Services.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MoneySaver.Api.Services.Implementation
@@ -196,6 +199,25 @@ namespace MoneySaver.Api.Services.Implementation
                     Amount = e.Amount,
                     TransactionCategoryId = e.TransactionCategoryId
                 });
+        }
+
+        public async Task<IEnumerable<IdValue<double?>>> SpentAmountPerCategorieAsync(Models.BudgetType budgetType, int? itemsToTake = null)
+        {
+            var datePeriodToSearch = DateUtility.GetPeriodByBudgetType(budgetType, DateTime.UtcNow);
+            var query = this.transactionRepository
+                    .GetAll()
+                    .Where(e => !e.IsDeleted && e.TransactionDate >= datePeriodToSearch.Start && e.TransactionDate <= datePeriodToSearch.End)
+                    .GroupBy(gb => gb.TransactionCategoryId)
+                    .Select(g => new IdValue<double?>
+                    {
+                        Id = g.Key,
+                        Value = g.Sum(a => a.Amount)
+                    });
+
+            var result = await query
+                .ToListAsync();
+
+            return result;
         }
     }
 }

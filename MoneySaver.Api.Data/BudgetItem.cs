@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace MoneySaver.Api.Data
 {
@@ -11,6 +9,12 @@ namespace MoneySaver.Api.Data
         public int Id { get; set; }
 
         public int TransactionCategoryId { get; set; }
+
+        public virtual TransactionCategory TransactionCategory { get; set; }
+
+        public int BudgetId { get; set; }
+
+        public virtual Budget Budget {get; set;}
 
         public double LimitAmount { get; set; }
 

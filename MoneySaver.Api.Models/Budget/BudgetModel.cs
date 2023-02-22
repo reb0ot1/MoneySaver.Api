@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MoneySaver.Api.Models
+namespace MoneySaver.Api.Models.Budget
 {
     public class BudgetModel
     {

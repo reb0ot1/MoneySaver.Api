@@ -1,3 +1,4 @@
+using AutoMapper;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -39,15 +40,15 @@ namespace MoneySaver.Api
             });
 
             services.AddWebService<MoneySaverApiContext>(Configuration);
-            services.AddHealthChecks();
+            //services.AddHealthChecks();
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<ITransactionCategoryService, TransactionCategoryService>();
             services.AddScoped<IBudgetService, BudgetService>();
-            services.AddControllers();
             services.AddAutoMapper(typeof(Startup));
             services.AddScoped<UserPackage>();
             services.AddScoped<IReportsService, ReportsService>();
+            services.AddScoped<IAppConfigurationService, AppConfigurationService>();
             services.AddCors(options =>
             {
                 //TODO: Change the CORS policy
@@ -56,7 +57,6 @@ namespace MoneySaver.Api
 
             services.AddControllers();
 
-            
             //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             //    .AddJwtBearer(options =>
             //    {

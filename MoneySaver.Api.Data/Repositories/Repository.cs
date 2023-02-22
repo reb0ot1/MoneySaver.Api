@@ -1,7 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
-using MoneySaver.Api.Models;
 using System.Linq;
 using System.Threading.Tasks;
+using MoneySaver.Api.Models;
+using System;
 
 namespace MoneySaver.Api.Data.Repositories
 {
@@ -46,9 +47,9 @@ namespace MoneySaver.Api.Data.Repositories
             {
                 this.logger
                     .LogError($"Forbbiden operation from user id {this.userPackage.UserId} to an entity which is property to user id {entity.UserId}");
-                throw new System.Exception($"Forbbiden operation from user id {this.userPackage.UserId} to an entity which is property to user id {entity.UserId}");
+                throw new Exception($"Forbbiden operation from user id {this.userPackage.UserId} to an entity which is property to user id {entity.UserId}");
             }
-
+            entity.UserId = this.userPackage.UserId;
             this.databaseContext.Update(entity);
             await this.databaseContext.SaveChangesAsync();
 

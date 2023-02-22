@@ -13,13 +13,14 @@ namespace MoneySaver.Api.Data
         public DbSet<TransactionCategory> TransactionCategories { get; set; }
         public DbSet<Budget> Budgets { get; set; }
         public DbSet<BudgetItem> BudgetItems { get; set; }
+        public DbSet<AppConfiguration> AppConfigurations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
             //seed categories
-            modelBuilder.Entity<TransactionCategory>().HasData(new TransactionCategory { TransactionCategoryId = 1, Name = "Food" });
-            modelBuilder.Entity<TransactionCategory>().HasData(new TransactionCategory { TransactionCategoryId = 2, Name = "Sport" });
+            //modelBuilder.Entity<TransactionCategory>().HasData(new TransactionCategory { TransactionCategoryId = 1, Name = "Food" });
+            //modelBuilder.Entity<TransactionCategory>().HasData(new TransactionCategory { TransactionCategoryId = 2, Name = "Sport" });
 
             //modelBuilder.Entity<Transaction>().HasData(new Transaction
             //{

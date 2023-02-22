@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using MoneySaver.Api.Models;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using MoneySaver.Api.Models.Budget;
+using MoneySaver.Api.Models.Request;
 using MoneySaver.Api.Services.Contracts;
 using System.Threading.Tasks;
 
@@ -7,6 +9,7 @@ namespace MoneySaver.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class BudgetController : Controller
     {
         private IBudgetService budgetService;
@@ -15,26 +18,37 @@ namespace MoneySaver.Api.Controllers
         {
             this.budgetService = budgetService;
         }
-        
-        [HttpGet("items")]
-        public async Task<IActionResult> GetBudgetItemsAsync()
+
+        [HttpGet("inuse")]
+        public async Task<IActionResult> GetCurrentInUse()
         {
-            var result = await this.budgetService.GetBudgetItems(BudgetType.Monthly);
+            //TODO: Add check if something went wrong
+            var result = await this.budgetService.GetCurrentInUseAsync();
 
             return this.Ok(result);
         }
 
-        [HttpPost("additem")]
-        public async Task<IActionResult> AddBudgetItem(BudgetItemModel budgetItem)
+        [HttpGet("{budgetId}/items")]
+        public async Task<IActionResult> GetBudgetItemsAsync(int budgetId)
         {
-            BudgetItemModel result = await this.budgetService.AddItemAsync(budgetItem);
+            //TODO: Add check if something went wrong
+            var result = await this.budgetService.GetBudgetItemsAsync(budgetId);
+
             return this.Ok(result);
         }
 
-        [HttpPut("updateitem")]
-        public async Task<IActionResult> UpdateBudgetItem(BudgetItemModel budgetItem)
+        [HttpPost("{budgetId}/additem")]
+        public async Task<IActionResult> AddBudgetItem(int budgetId, BudgetItemModel budgetItem)
         {
-            BudgetItemModel result = await this.budgetService.EditItemAsync(budgetItem);
+            //TODO: Add check if something went wrong
+            BudgetItemModel result = await this.budgetService.AddItemAsync(budgetId, budgetItem);
+            return this.Ok(result);
+        }
+
+        [HttpPut("{budgetId}/updateItem/{itemId}")]
+        public async Task<IActionResult> UpdateBudgetItem(int budgetId, int itemId, BudgetItemRequestModel budgetItem)
+        {
+            BudgetItemModel result = await this.budgetService.EditItemAsync(budgetId, itemId, budgetItem);
             if (result == null)
             {
                 return this.BadRequest();
@@ -43,10 +57,33 @@ namespace MoneySaver.Api.Controllers
             return this.Ok(result);
         }
 
-        [HttpDelete("removeitem/{id}")]
-        public async Task<IActionResult> RemoveItem(int id)
+        [HttpDelete("{budgetId}/removeitem/{itemId}")]
+        public async Task<IActionResult> RemoveItem2(int budgetId, int id)
         {
-            await this.budgetService.RemoveItemAsync(id);
+            //TODO: Add check if something went wrong
+            await this.budgetService.RemoveItemAsync(budgetId, id);
+            return this.Ok();
+        }
+
+        [HttpPost("add")]
+        public async Task<IActionResult> AddBudget(CreateBudgetRequest model)
+        {
+            var result = await this.budgetService.CreateBudget(model);
+
+            if (result == null)
+            {
+                return this.BadRequest("Something went wrong.");
+            }
+
+            return this.Ok(result);
+        }
+
+        [HttpPost("{id}/copy")]
+        public async Task<IActionResult> CopyBudget(int id)
+        {
+            //TODO: Add check if something went wrong
+            await this.budgetService.CopyBudgetAsync(id);
+
             return this.Ok();
         }
     }

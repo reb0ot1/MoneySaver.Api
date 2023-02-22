@@ -16,7 +16,7 @@ namespace MoneySaver.Api.Data
 
         public int TransactionCategoryId { get; set; }
 
-        public TransactionCategory TransactionCategory { get; set; }
+        public virtual TransactionCategory TransactionCategory { get; set; }
 
         public double Amount { get; set; }
 

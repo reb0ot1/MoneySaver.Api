@@ -49,7 +49,13 @@ namespace MoneySaver.Api.Controllers
         public async Task<IActionResult> CreateTransaction(TransactionModel transactionModel)
         {
             TransactionModel result = await this.transactionService.CreateTransactionAsync(transactionModel);
+            return this.Ok(result);
+        }
 
+        [HttpPost("spentAmountByCategory")]
+        public async Task<IActionResult> GetTransactionAmountSpentByCategory(PageRequest pageRequest)
+        {
+            var result = await this.transactionService.SpentAmountPerCategorieAsync(pageRequest.BudgetType, pageRequest.ItemsPerPage);
             return this.Ok(result);
         }
 

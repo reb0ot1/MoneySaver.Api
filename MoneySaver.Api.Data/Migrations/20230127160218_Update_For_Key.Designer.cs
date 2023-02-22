@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MoneySaver.Api.Data;
 
@@ -11,9 +12,10 @@ using MoneySaver.Api.Data;
 namespace MoneySaver.Api.Data.Migrations
 {
     [DbContext(typeof(MoneySaverApiContext))]
-    partial class MoneySaverApiContextModelSnapshot : ModelSnapshot
+    [Migration("20230127160218_Update_For_Key")]
+    partial class Update_For_Key
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,38 +23,6 @@ namespace MoneySaver.Api.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
-
-            modelBuilder.Entity("MoneySaver.Api.Data.AppConfiguration", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("Id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<int>("BudgetType")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Currency")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("ModifiedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("AppConfigurations");
-                });
 
             modelBuilder.Entity("MoneySaver.Api.Data.Budget", b =>
                 {
@@ -200,6 +170,20 @@ namespace MoneySaver.Api.Data.Migrations
                     b.HasKey("TransactionCategoryId");
 
                     b.ToTable("TransactionCategories");
+
+                    b.HasData(
+                        new
+                        {
+                            TransactionCategoryId = 1,
+                            IsDeleted = false,
+                            Name = "Food"
+                        },
+                        new
+                        {
+                            TransactionCategoryId = 2,
+                            IsDeleted = false,
+                            Name = "Sport"
+                        });
                 });
 
             modelBuilder.Entity("MoneySaver.Api.Data.BudgetItem", b =>

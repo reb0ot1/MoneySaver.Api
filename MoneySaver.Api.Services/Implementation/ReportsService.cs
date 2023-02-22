@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Logging;
 using MoneySaver.Api.Data;
 using MoneySaver.Api.Data.Repositories;
@@ -7,6 +6,7 @@ using MoneySaver.Api.Models;
 using MoneySaver.Api.Models.Filters;
 using MoneySaver.Api.Models.Reports;
 using MoneySaver.Api.Services.Contracts;
+using MoneySaver.Api.Services.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,7 +37,7 @@ namespace MoneySaver.Api.Services.Implementation
         //TODO: Add filter parameter
         public async Task<LineChartData> GetExpensesByPeriod(FilterModel filter)
         {
-            var startEndDates = this.GetStartEndDateByMonthInterval(filter.From, filter.To);
+            var startEndDates = DateUtility.GetStartEndDateByMonthInterval(filter.From, filter.To);
 
             var dateTime = startEndDates.Item2.Date;
             var testDateTime = startEndDates.Item1;
@@ -90,7 +90,7 @@ namespace MoneySaver.Api.Services.Implementation
             var dataItems = new LineChartData();
             try
             {
-                var startEndDates = this.GetStartEndDateByMonthInterval(filter.From, filter.To);
+                var startEndDates = DateUtility.GetStartEndDateByMonthInterval(filter.From, filter.To);
 
                 var dateTime = startEndDates.Item2.Date;
                 var testDateTime = startEndDates.Item1;
@@ -170,7 +170,7 @@ namespace MoneySaver.Api.Services.Implementation
             var dataItems = new List<DataItem>();
             try
             {
-                var startEndDates = this.GetStartEndDateByMonthInterval(filter.From, filter.To);
+                var startEndDates = DateUtility.GetStartEndDateByMonthInterval(filter.From, filter.To);
 
                 var query = from transactionItem in this.transactionRepository.GetAll()
                         .Where(e => !e.IsDeleted && e.TransactionDate >= startEndDates.Item1 && e.TransactionDate <= startEndDates.Item2 )
@@ -216,15 +216,6 @@ namespace MoneySaver.Api.Services.Implementation
             }
 
             return dataItems;
-        }
-
-        private (DateTime, DateTime) GetStartEndDateByMonthInterval(DateTime start, DateTime end)
-        {
-            var daysInMonth = DateTime.DaysInMonth(end.Year, end.Month);
-            var dateEndMonth = new DateTime(end.Year, end.Month, daysInMonth);
-            var dateStartMonth = new DateTime(start.Year, start.Month, 01);
-
-            return (dateStartMonth, dateEndMonth);
         }
     }
 }
