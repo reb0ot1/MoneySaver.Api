@@ -3,9 +3,12 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
-	
-	<ItemGroup>
-		<ProjectReference Include="..\MoneySaver.System\MoneySaver.System.csproj" />
-	</ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MoneySaver.System" Version="1.0.0" />
+  </ItemGroup>
+	
+	<!--<ItemGroup>
+		<ProjectReference Include="..\MoneySaver.System\MoneySaver.System.csproj" />
+	</ItemGroup>-->
 </Project>

@@ -50,7 +50,6 @@ namespace MoneySaver.Api.Services.Implementation
             try
             {
                 var budgetDb = await this.budgetRepository.GetAll().FirstOrDefaultAsync(e => e.Id == budgetId);
-
                 var newDates = DateUtility.GetBudgetTypeNextDate(budgetDb.BudgetType, budgetDb.StartDate);
                 var checkIfBudgetExists = await this.budgetRepository
                     .GetAll()
@@ -74,7 +73,7 @@ namespace MoneySaver.Api.Services.Implementation
 
                 var newBudget = new Budget
                 {
-                    Name = budgetDb.Name,
+                    Name = newDates.Start.ToString("MM") + "-" + newDates.Start.ToString("yyy"),
                     BudgetType = budgetDb.BudgetType,
                     StartDate = newDates.Start,
                     EndDate = newDates.End,

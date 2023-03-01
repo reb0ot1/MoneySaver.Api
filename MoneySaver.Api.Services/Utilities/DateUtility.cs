@@ -8,8 +8,8 @@ namespace MoneySaver.Api.Services.Utilities
         public static (DateTime Start, DateTime End) GetStartEndDateByMonthInterval(DateTime start, DateTime end)
         {
             var daysInMonth = DateTime.DaysInMonth(end.Year, end.Month);
-            var dateEndMonth = new DateTime(end.Year, end.Month, daysInMonth);
-            var dateStartMonth = new DateTime(start.Year, start.Month, 01);
+            var dateEndMonth = new DateTime(end.Year, end.Month, daysInMonth).AddDays(1).AddTicks(-1);
+            var dateStartMonth = new DateTime(start.Year, start.Month, 1);
 
             return (dateStartMonth, dateEndMonth);
         }

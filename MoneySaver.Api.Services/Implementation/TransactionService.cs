@@ -50,7 +50,7 @@ namespace MoneySaver.Api.Services.Implementation
             }
             catch(Exception ex)
             {
-                this.logger.LogError(ex, $"Failed to create transaction. UserId {this.userPackage.UserId}", transactionModel);
+                this.logger.LogError(ex, $"Failed to create transaction. UserId {this.userPackage.UserId}, model [{0}]", transactionModel);
             }
 
             return null;
@@ -201,8 +201,9 @@ namespace MoneySaver.Api.Services.Implementation
                 });
         }
 
-        public async Task<IEnumerable<IdValue<double?>>> SpentAmountPerCategorieAsync(Models.BudgetType budgetType, int? itemsToTake = null)
+        public async Task<IEnumerable<IdValue<double?>>> SpentAmountPerCategorieAsync(BudgetType budgetType, int? itemsToTake = null)
         {
+            //TODO: Use the budget in use from the database
             var datePeriodToSearch = DateUtility.GetPeriodByBudgetType(budgetType, DateTime.UtcNow);
             var query = this.transactionRepository
                     .GetAll()
@@ -214,8 +215,12 @@ namespace MoneySaver.Api.Services.Implementation
                         Value = g.Sum(a => a.Amount)
                     });
 
-            var result = await query
-                .ToListAsync();
+            var result = await query.ToListAsync();
+
+            if (itemsToTake != null)
+            { 
+                return result.Take((int)itemsToTake);
+            }
 
             return result;
         }
