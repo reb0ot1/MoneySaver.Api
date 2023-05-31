@@ -5,6 +5,7 @@ using MoneySaver.Api.Data;
 using MoneySaver.Api.Data.Repositories;
 using MoneySaver.Api.Models;
 using MoneySaver.Api.Services.Contracts;
+using MoneySaver.System.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,10 +32,35 @@ namespace MoneySaver.Api.Services.Implementation
             this.userPackage = userPackage;
         }
 
-        public async Task<TransactionCategoryModel> CreateCategoryAsync(TransactionCategoryModel categoryModel)
+        public async Task<Result<TransactionCategoryModel>> CreateCategoryAsync(TransactionCategoryModel categoryModel)
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(categoryModel.Name))
+                {
+                    return "Missing category name.";
+                }
+
+                var categoryDb = await this.categoryRepository
+                    .GetAll()
+                    .FirstOrDefaultAsync(e => e.Name == categoryModel.Name);
+
+                if (categoryDb is not null)
+                {
+                    return $"Category with name [{categoryModel.Name}] already exist.";
+                }
+
+                if (categoryModel.ParentId is not null)
+                {
+                    var parrentCategoryExists = await this.categoryRepository
+                                                            .GetAll()
+                                                            .AnyAsync(e => e.TransactionCategoryId == categoryModel.ParentId);
+                    if (!parrentCategoryExists)
+                    {
+                        return $"Parrent category with id [{categoryModel.ParentId}] does not exist.";
+                    }
+                }
+
                 TransactionCategory transactionCategory = mapper.Map<TransactionCategory>(categoryModel);
                 var result = await this.categoryRepository.AddAsync(transactionCategory);
                 categoryModel.TransactionCategoryId = result.TransactionCategoryId;
@@ -44,57 +70,64 @@ namespace MoneySaver.Api.Services.Implementation
 
             catch (Exception ex)
             {
-                this.logger.LogError(ex, $"Failed to create new category. UserId {this.userPackage.UserId}.", categoryModel);
-            }
+                var message = $"Failed to create new category. UserId {this.userPackage.UserId}.";
+                this.logger.LogError(ex, message, categoryModel);
 
-            return null;
+                return message;
+            }
         }
 
-        public async Task<IEnumerable<TransactionCategoryModel>> GetAllCategoriesAsync()
+        public async Task<Result<IEnumerable<TransactionCategoryModel>>> GetAllCategoriesAsync()
         {
-            IEnumerable<TransactionCategoryModel> result = new List<TransactionCategoryModel>();
             try
-            {
-                List<TransactionCategory> categories = await categoryRepository
+            { 
+                List<TransactionCategoryModel> categories = await categoryRepository
                 .GetAll()
+                .Select(e => new TransactionCategoryModel { 
+                    TransactionCategoryId = e.TransactionCategoryId,
+                    Name = e.Name,
+                    ParentId = e.ParentId
+                })
                 .ToListAsync();
 
-                result = categories.Select(s => mapper.Map<TransactionCategoryModel>(s));
-
-                return result;
+                return categories;
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, $"Failed to gather categories. UserId {this.userPackage.UserId}.");
-            }
+                var message = $"Failed to gather categories. UserId {this.userPackage.UserId}.";
+                this.logger.LogError(ex, message);
 
-            return null;
+                return message;
+            }
         }
 
-        public async Task<TransactionCategoryModel> GetCategoryAsync(int id)
+        public async Task<Result<TransactionCategoryModel>> GetCategoryAsync(int id)
         {
-            TransactionCategoryModel transactionCategoryModel = new TransactionCategoryModel();
-
             try
             {
                 TransactionCategory transactionCategory = await this.categoryRepository
                     .GetAll()
                     .FirstOrDefaultAsync(c => c.TransactionCategoryId == id);
 
-                transactionCategoryModel = mapper.Map<TransactionCategoryModel>(transactionCategory);
+                if (transactionCategory is null)
+                {
+                    return $"Category with id [{id}] does not exist.";
+                }
 
-                return transactionCategoryModel;
+                return mapper.Map<TransactionCategoryModel>(transactionCategory);
             }
 
             catch (Exception ex)
             {
-                this.logger.LogError(ex, $"Failed to get category with id {id}. UserId {this.userPackage.UserId}.");
-            }
+                var message = $"Failed to get category with id {id}. UserId {this.userPackage.UserId}.";
+                this.logger.LogError(ex, message);
 
-            return null;
+                return message;
+            }
         }
 
-        public async Task RemoveCategoryAsync(int id)
+        [Obsolete]
+        public async Task<Result<bool>> RemoveCategoryAsync(int id)
         {
             try
             {
@@ -105,30 +138,68 @@ namespace MoneySaver.Api.Services.Implementation
                 transactionCategory.IsDeleted = true;
                 transactionCategory.DeletedOnUtc = DateTime.UtcNow;
                 await this.categoryRepository.SetAsDeletedAsync(transactionCategory);
+
+                return true;
             }
 
             catch (Exception ex)
             {
-                this.logger.LogError(ex, $"Failed to remove category with id {id}. UserId {this.userPackage.UserId}.");
+                var message = $"Failed to remove category with id {id}. UserId {this.userPackage.UserId}.";
+                this.logger.LogError(ex, message);
+
+                return message;
             }
         }
 
-        public async Task<TransactionCategoryModel> UpdateCategoryAsync(TransactionCategoryModel categoryModel)
+        public async Task<Result<TransactionCategoryModel>> UpdateCategoryAsync(TransactionCategoryModel categoryModel)
         {
             try
             {
-                TransactionCategory transactionCategory = mapper.Map<TransactionCategory>(categoryModel);
-                await this.categoryRepository.UpdateAsync(transactionCategory);
+                if (string.IsNullOrWhiteSpace(categoryModel.Name))
+                {
+                    return "Missing category name.";
+                }
+
+                if (categoryModel.TransactionCategoryId is null)
+                {
+                    return "Missing transaction category id.";
+                }
+
+                var categoryDb = await this.categoryRepository
+                    .GetAll()
+                    .FirstOrDefaultAsync(e => e.TransactionCategoryId == categoryModel.TransactionCategoryId);
+
+                if (categoryDb is null)
+                {
+                    return $"Category with id [{categoryModel.TransactionCategoryId}] does not exist.";
+                }
+
+                if (categoryModel.ParentId is not null)
+                {
+                    var parrentCategoryExists = await this.categoryRepository
+                        .GetAll()
+                        .AnyAsync(e => e.TransactionCategoryId == categoryModel.ParentId);
+
+                    if (!parrentCategoryExists)
+                    {
+                        return $"Parrent category with id [{categoryModel.ParentId}] does not exist.";
+                    }
+                }
+
+                categoryDb.Name = categoryModel.Name;
+                categoryDb.ParentId = categoryModel.ParentId;
+                await this.categoryRepository.UpdateAsync(categoryDb);
 
                 return categoryModel;
             }
 
             catch (Exception ex)
             {
-                this.logger.LogError(ex, $"Failed to update category. UserId {this.userPackage.UserId}.", categoryModel);
+                var message = $"Failed to update category. UserId {this.userPackage.UserId}.";
+                this.logger.LogError(ex, message, categoryModel);
+                
+                return message;
             }
-
-            return null;
         }
     }
 }

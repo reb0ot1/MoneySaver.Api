@@ -15,7 +15,7 @@ namespace MoneySaver.Api.Models.Budget
 
         public DateTime EndDate { get; set; }
 
-        public bool IsCurenttlyInUse { get; set; }
+        public bool IsInUse { get; set; }
 
         public IEnumerable<BudgetItemModel> BudgetItems { get; set; }
     }

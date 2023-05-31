@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MoneySaver.Api.Data;
 using MoneySaver.Api.Models.Filters;
 using MoneySaver.Api.Models.Reports;
+using MoneySaver.Api.Models.Request;
 using MoneySaver.Api.Services.Contracts;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -42,6 +42,13 @@ namespace MoneySaver.Api.Controllers
         {
             LineChartData result = await this.reportsService.GetExpensesForPeriodByCategoriesAsync(filter);
 
+            return this.Ok(result);
+        }
+
+        [HttpPost("spentAmountByCategory")]
+        public async Task<IActionResult> GetTransactionAmountSpentByCategory(PageRequest pageRequest)
+        {
+            var result = await this.reportsService.SpentAmountPerCategorieAsync(pageRequest);
             return this.Ok(result);
         }
     }

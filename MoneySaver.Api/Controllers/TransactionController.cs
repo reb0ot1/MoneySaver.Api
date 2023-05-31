@@ -24,6 +24,7 @@ namespace MoneySaver.Api.Controllers
         [HttpPost("page")]
         public async Task<IActionResult> GetTransactionsPerPage(PageRequest page)
         {
+            //TODO: Add check for return bad request if needed
             PageModel<TransactionModel> result = await this.transactionService.GetTransactionsForPageAsync(page);
 
             return this.Ok(result);
@@ -32,6 +33,7 @@ namespace MoneySaver.Api.Controllers
         [HttpGet("{transactionId}")]
         public async Task<IActionResult> GetTransaction(Guid transactionId)
         {
+            //TODO: Add check for return bad request if needed
             TransactionModel result = await this.transactionService.GetTransactionAsync(transactionId);
 
             return this.Ok(result);
@@ -40,6 +42,7 @@ namespace MoneySaver.Api.Controllers
         [HttpPut]
         public async Task<IActionResult> UpdateTransaction(TransactionModel transactionModel)
         {
+            //TODO: Add check for return bad request if needed
             TransactionModel result = await this.transactionService.UpdateTransactionAsync(transactionModel);
 
             return this.Ok(result);
@@ -48,20 +51,15 @@ namespace MoneySaver.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateTransaction(TransactionModel transactionModel)
         {
+            //TODO: Add check for return bad request if needed
             TransactionModel result = await this.transactionService.CreateTransactionAsync(transactionModel);
-            return this.Ok(result);
-        }
-
-        [HttpPost("spentAmountByCategory")]
-        public async Task<IActionResult> GetTransactionAmountSpentByCategory(PageRequest pageRequest)
-        {
-            var result = await this.transactionService.SpentAmountPerCategorieAsync(pageRequest.BudgetType, pageRequest.ItemsPerPage);
             return this.Ok(result);
         }
 
         [HttpGet("remove/{id}")]
         public async Task<IActionResult> RemoveTransaction(Guid id)
         {
+            //TODO: Add check for return bad request if needed
             await this.transactionService.RemoveTransactionAsync(id);
 
             return this.Ok();

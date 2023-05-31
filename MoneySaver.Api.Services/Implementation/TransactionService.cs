@@ -6,13 +6,10 @@ using MoneySaver.Api.Data.Repositories;
 using MoneySaver.Api.Models;
 using MoneySaver.Api.Models.Request;
 using MoneySaver.Api.Models.Response;
-using MoneySaver.Api.Models.Shared;
 using MoneySaver.Api.Services.Contracts;
-using MoneySaver.Api.Services.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace MoneySaver.Api.Services.Implementation
@@ -119,10 +116,9 @@ namespace MoneySaver.Api.Services.Implementation
                     return null;
                 }
 
-                Transaction transactionEntity = await this
-                    .transactionRepository
-                    .GetAll()
-                    .FirstOrDefaultAsync(e => e.Id == validId);
+                Transaction transactionEntity = await this.transactionRepository
+                                                        .GetAll()
+                                                        .FirstOrDefaultAsync(e => e.Id == validId);
 
                 if (transactionEntity == null)
                 {
@@ -199,30 +195,6 @@ namespace MoneySaver.Api.Services.Implementation
                     Amount = e.Amount,
                     TransactionCategoryId = e.TransactionCategoryId
                 });
-        }
-
-        public async Task<IEnumerable<IdValue<double?>>> SpentAmountPerCategorieAsync(BudgetType budgetType, int? itemsToTake = null)
-        {
-            //TODO: Use the budget in use from the database
-            var datePeriodToSearch = DateUtility.GetPeriodByBudgetType(budgetType, DateTime.UtcNow);
-            var query = this.transactionRepository
-                    .GetAll()
-                    .Where(e => !e.IsDeleted && e.TransactionDate >= datePeriodToSearch.Start && e.TransactionDate <= datePeriodToSearch.End)
-                    .GroupBy(gb => gb.TransactionCategoryId)
-                    .Select(g => new IdValue<double?>
-                    {
-                        Id = g.Key,
-                        Value = g.Sum(a => a.Amount)
-                    });
-
-            var result = await query.ToListAsync();
-
-            if (itemsToTake != null)
-            { 
-                return result.Take((int)itemsToTake);
-            }
-
-            return result;
         }
     }
 }

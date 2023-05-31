@@ -1,4 +1,3 @@
-using AutoMapper;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -49,6 +48,7 @@ namespace MoneySaver.Api
             services.AddScoped<UserPackage>();
             services.AddScoped<IReportsService, ReportsService>();
             services.AddScoped<IAppConfigurationService, AppConfigurationService>();
+            services.AddScoped<IDateProvider, DateProvider>();
             services.AddCors(options =>
             {
                 //TODO: Change the CORS policy

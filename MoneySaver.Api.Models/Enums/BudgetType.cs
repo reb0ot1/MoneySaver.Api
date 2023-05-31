@@ -8,6 +8,7 @@ namespace MoneySaver.Api.Models
     {
         Weekly,
         Monthly,
-        Yearly
+        Yearly,
+        Custom
     }
 }

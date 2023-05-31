@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MoneySaver.Api.Models;
 using MoneySaver.Api.Services.Contracts;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MoneySaver.Api.Controllers
@@ -25,40 +24,65 @@ namespace MoneySaver.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            IEnumerable<TransactionCategoryModel> result
-                = await this.categoryService.GetAllCategoriesAsync();
+            var result = await this.categoryService.GetAllCategoriesAsync();
+            if (result.Succeeded)
+            {
+                return this.Ok(result.Data);
+            }
 
-            return this.Ok(result);
+            return this.BadRequest(result.Errors);
         }
 
         [HttpGet("{transactionCategoryId}")]
         public async Task<IActionResult> GetCategory(int transactionCategoryId)
         {
-            TransactionCategoryModel result = await this.categoryService.GetCategoryAsync(transactionCategoryId);
+            var result = await this.categoryService.GetCategoryAsync(transactionCategoryId);
 
-            return this.Ok(result);
+            if (result.Succeeded)
+            {
+                return this.Ok(result.Data);
+            }
+
+            return this.BadRequest(result.Errors);
         }
 
         [HttpPut]
         public async Task<IActionResult> UpdateCategory(TransactionCategoryModel transactionCategoryModel)
         {
-            TransactionCategoryModel result = await this.categoryService.UpdateCategoryAsync(transactionCategoryModel);
+            var result = await this.categoryService.UpdateCategoryAsync(transactionCategoryModel);
 
-            return this.Ok(result);
+            if (result.Succeeded)
+            {
+                return this.Ok(result.Data);
+            }
+
+            return this.BadRequest(result.Errors);
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateCategory(TransactionCategoryModel transactionCategoryModel)
         {
-            TransactionCategoryModel result = await this.categoryService.CreateCategoryAsync(transactionCategoryModel);
+            var result = await this.categoryService.CreateCategoryAsync(transactionCategoryModel);
 
-            return this.Ok(result);
+            if (result.Succeeded)
+            { 
+               return this.Ok(result.Data);
+            }
+
+            return this.BadRequest(result.Errors);
         }
 
         [HttpDelete]
-        public async Task RemoveCategory(int transactionCategoryId)
+        public async Task<IActionResult> RemoveCategory(int transactionCategoryId)
         {
-             await this.categoryService.RemoveCategoryAsync(transactionCategoryId);
+            var result = await this.categoryService.RemoveCategoryAsync(transactionCategoryId);
+
+            if (result.Succeeded)
+            {
+                return this.Ok(result.Data);
+            }
+
+            return this.BadRequest(result.Errors);
         }
     }
 }

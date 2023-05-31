@@ -14,5 +14,7 @@ namespace MoneySaver.Api.Models.Response
 
         //TODO: Use enum option name instead enum option value
         public BudgetType BudgetType { get; set; }
+
+        public bool IsInUse { get; set; }
     }
 }

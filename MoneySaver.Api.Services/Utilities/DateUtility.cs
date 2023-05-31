@@ -14,23 +14,23 @@ namespace MoneySaver.Api.Services.Utilities
             return (dateStartMonth, dateEndMonth);
         }
 
-        public static (DateTime Start, DateTime End) GetPeriodByBudgetType(Models.BudgetType budgetType, DateTime date)
+        public static (DateTime Start, DateTime End) GetPeriodByBudgetType(BudgetType budgetType, DateTime date)
         {
             DateTime startDate;
             DateTime endDate;
 
             switch (budgetType)
             {
-                case Models.BudgetType.Weekly:
+                case BudgetType.Weekly:
                     startDate = date;
                     endDate = date;
                     break;
-                case Models.BudgetType.Monthly:
+                case BudgetType.Monthly:
                     var result = GetStartEndDateByMonthInterval(date, date);
                     endDate = result.End;
                     startDate = result.Start;
                     break;
-                case Models.BudgetType.Yearly:
+                case BudgetType.Yearly:
                     endDate = new DateTime(date.Year, 12, 31);
                     startDate = new DateTime(date.Year, 01, 01);
                     break;

@@ -5,6 +5,8 @@ using MoneySaver.Api.Data.Repositories;
 using MoneySaver.Api.Models;
 using MoneySaver.Api.Models.Filters;
 using MoneySaver.Api.Models.Reports;
+using MoneySaver.Api.Models.Request;
+using MoneySaver.Api.Models.Shared;
 using MoneySaver.Api.Services.Contracts;
 using MoneySaver.Api.Services.Utilities;
 using System;
@@ -55,7 +57,7 @@ namespace MoneySaver.Api.Services.Implementation
             {
                 var query = this.transactionRepository
                     .GetAll()
-                    .Where(e => !e.IsDeleted && e.TransactionDate >= startEndDates.Item1 && e.TransactionDate <= startEndDates.Item2)
+                    .Where(e => e.TransactionDate >= startEndDates.Item1 && e.TransactionDate <= startEndDates.Item2)
                     .GroupBy(o => new
                     {
                         Month = o.TransactionDate.Month,
@@ -216,6 +218,29 @@ namespace MoneySaver.Api.Services.Implementation
             }
 
             return dataItems;
+        }
+
+        public async Task<IEnumerable<IdValue<double?>>> SpentAmountPerCategorieAsync(PageRequest pageRequest)
+        {
+            var query = this.transactionRepository
+                    .GetAll()
+                    .Where(e => e.TransactionDate >= pageRequest.Filter.From && e.TransactionDate <= pageRequest.Filter.To)
+                    .GroupBy(gb => gb.TransactionCategoryId)
+                    .Select(g => new IdValue<double?>
+                    {
+                        Id = g.Key,
+                        Value = g.Sum(a => a.Amount)
+                    })
+                    .OrderByDescending(e => e.Value);
+
+            var result = await query.ToListAsync();
+            
+            if (pageRequest.ItemsPerPage > 0)
+            {
+                return result.Take(pageRequest.ItemsPerPage);
+            }
+
+            return result;
         }
     }
 }

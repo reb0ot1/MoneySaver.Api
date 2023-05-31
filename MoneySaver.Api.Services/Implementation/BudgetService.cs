@@ -12,6 +12,7 @@ using MoneySaver.Api.Services.Utilities;
 using MoneySaver.System.Services;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -24,8 +25,9 @@ namespace MoneySaver.Api.Services.Implementation
         private IRepository<Transaction> transactionRepository;
         private IMapper mapper;
         private IRepository<TransactionCategory> transactionCategory;
-        private ILogger<BudgetService> logger;
+        private ILogger<BudgetService> _logger;
         private UserPackage userPackage;
+        private readonly IDateProvider _dateProvider;
 
         public BudgetService(
             IRepository<Budget> budgetRepository, 
@@ -34,22 +36,91 @@ namespace MoneySaver.Api.Services.Implementation
             IRepository<Transaction> transactionRepository,
             IMapper mapper,
             ILogger<BudgetService> logger,
-            UserPackage userPackage)
+            UserPackage userPackage,
+            IDateProvider dateProvider)
         {
             this.budgetRepository = budgetRepository;
             this.budgetItemRepository = budgetItemRepository;
             this.mapper = mapper;
             this.transactionCategory = transactionCategory;
             this.transactionRepository = transactionRepository;
-            this.logger = logger;
+            this._logger = logger;
             this.userPackage = userPackage;
+            this._dateProvider = dateProvider;
         }
 
+        public async Task<Result<BudgetResponseModel>> GetBudgetAsync(int id)
+        {
+            try
+            {
+                var budgetDb = await this.budgetRepository
+                    .GetAll()
+                    .FirstOrDefaultAsync(e => e.Id == id);
+
+                if (budgetDb is null)
+                {
+                    return $"Budget with id [{id}] not found.";
+                }
+
+                var result = mapper.Map<BudgetResponseModel>(budgetDb);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var message = $"Failed to get budget with id [{id}].";
+                this._logger.LogError(ex, message + $" User id [{this.userPackage.UserId}]");
+                return message;
+            }
+        }
+
+        public async Task<Result<PageModel<BudgetResponseModel>>> GetBudgetsPerPageAsync(int page, int pageSize)
+        {
+            try
+            {
+                var pageProps = RequestsUtility.CheckPageProperties(page, pageSize);
+                var budgetsCount = await this.budgetRepository.GetAll().CountAsync();
+                var budgetsResult = await this.budgetRepository
+                    .GetAll()
+                    .OrderByDescending(e => e.IsInUse)
+                    .ThenByDescending(e => e.StartDate)
+                    .Skip((pageProps.Page - 1) * pageProps.PageSize)
+                    .Take(pageProps.PageSize    )
+                    .Select(e => new BudgetResponseModel { 
+                        BudgetType = e.BudgetType,
+                        EndDate = e.EndDate,
+                        StartDate = e.StartDate,
+                        Id = e.Id,
+                        Name = e.Name,
+                        IsInUse = e.IsInUse
+                    })
+                    .ToListAsync();
+
+                var resultModel = Result<PageModel<BudgetResponseModel>>
+                                        .SuccessWith(new PageModel<BudgetResponseModel> 
+                                        {   
+                                            Result = budgetsResult,
+                                            TotalCount = budgetsCount
+                                        });
+                return resultModel;
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, $"Failed to get budgets. UserId {this.userPackage.UserId}");
+                return $"Something went wrong while trying to get all budgets.";
+            }
+        }
+
+        //TODO: Change the model which needs to be returned
+        //TODO: Think about if the budget should be set as IsCurrentlyInUse when coping a budget
         public async Task<Result<Budget>> CopyBudgetAsync(int budgetId, bool setToBeInUse = false)
         {
             try
             {
-                var budgetDb = await this.budgetRepository.GetAll().FirstOrDefaultAsync(e => e.Id == budgetId);
+                var budgetDb = await this.budgetRepository
+                    .GetAll()
+                    .FirstOrDefaultAsync(e => e.Id == budgetId);
+
                 var newDates = DateUtility.GetBudgetTypeNextDate(budgetDb.BudgetType, budgetDb.StartDate);
                 var checkIfBudgetExists = await this.budgetRepository
                     .GetAll()
@@ -59,123 +130,230 @@ namespace MoneySaver.Api.Services.Implementation
                 {
                     return $"Budget already exists for budget type [{budgetDb.BudgetType}] and date range [{newDates.Start.ToString("dd/mm/yyyy")} - {newDates.End.ToString("dd/mm/yyyy")}]";
                 }
-                
-                var butgetItems = await this.budgetItemRepository
-                    .GetAll()
-                    .Where(e => e.BudgetId == budgetId)
+
+                var butgetItems = budgetDb.BudgetItems
                     .Select(s => new BudgetItem
                     {
                         LimitAmount = s.LimitAmount,
                         TransactionCategoryId = s.TransactionCategoryId,
                         UserId = s.UserId
                     })
-                    .ToListAsync();
+                    .ToList();
 
                 var newBudget = new Budget
                 {
-                    Name = newDates.Start.ToString("MM") + "-" + newDates.Start.ToString("yyy"),
+                    Name = this.CreateBudgetNameByStartDate(newDates.Start),
                     BudgetType = budgetDb.BudgetType,
                     StartDate = newDates.Start,
                     EndDate = newDates.End,
-                    BudgetItems = butgetItems,
-                    IsCurenttlyInUse = setToBeInUse
+                    BudgetItems = butgetItems
                 };
 
+                if (setToBeInUse)
+                {
+                    var budgetCurrentlyInUse = await this.budgetRepository
+                    .GetAll()
+                    .FirstOrDefaultAsync(e => e.IsInUse);
+
+                    budgetCurrentlyInUse.IsInUse = false;
+
+                    await this.budgetRepository.UpdateAsync(budgetCurrentlyInUse);
+
+                    newBudget.IsInUse = true;
+                }
+
+                //TODO: This insert should be moved to another place
                 var copiedBudget =  await this.budgetRepository.AddAsync(newBudget);
 
                 return copiedBudget;
             }
             catch (Exception ex)
             {
-
-                this.logger.LogError(ex, $"Failed to copy budget with id {budgetId}. UserId {this.userPackage.UserId}");
+                this._logger.LogError(ex, $"Failed to copy budget with id {budgetId}. UserId {this.userPackage.UserId}");
                 return $"Something went wrong while trying to copy budget with id [{budgetId}].";
             }
         }
 
-        public async Task<BudgetItemModel> AddItemAsync(int budgetId, BudgetItemModel budgetItemModel)
+        public async Task<Result<BudgetItemModel>> AddItemAsync(int budgetId, BudgetItemModel budgetItemModel)
         {
             try
             {
-                //TODO: Check if budget exists
-                //TODO: Check if category exists
-                BudgetItem budgetItem = mapper.Map<BudgetItem>(budgetItemModel);
+                var budget = await this.budgetRepository
+                    .GetAll()
+                    .FirstOrDefaultAsync(e => e.Id == budgetId);
+
+                if (budget is null)
+                {
+                    return $"Budget with id [{budgetId}] does not exist.";
+                }
+
+                var category = await this.transactionCategory.GetAll().FirstOrDefaultAsync(e => e.TransactionCategoryId == budgetItemModel.TransactionCategoryId);
+                if (category is null)
+                {
+                    return $"Category with id [{budgetItemModel.TransactionCategoryId}] does not exist.";
+                }
+
+                if (budget.BudgetItems.Any(e => e.TransactionCategoryId == budgetItemModel.TransactionCategoryId))
+                {
+                    return $"Category with id [{budgetItemModel.TransactionCategoryId}] already exists in budget with id [{budgetId}].";
+                }
+
+                //BudgetItem budgetItem = mapper.Map<BudgetItem>(budgetItemModel);
+                BudgetItem budgetItem = new BudgetItem
+                {
+                    BudgetId = budgetId,
+                    LimitAmount = budgetItemModel.LimitAmount,
+                    TransactionCategoryId = budgetItemModel.TransactionCategoryId
+                };
+
                 budgetItem.BudgetId = budgetId;
-                budgetItem.TransactionCategory = null;
-                var result = await this.budgetItemRepository.AddAsync(budgetItem);
+                var result = await this.budgetItemRepository
+                    .AddAsync(budgetItem);
+                
                 budgetItemModel.Id = result.Id;
 
                 return budgetItemModel;
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, $"Failed to add budget item. UserId {this.userPackage.UserId}", budgetItemModel);
+                var message = $"Failed to add budget item. UserId {this.userPackage.UserId}";
+                this._logger.LogError(ex, message, budgetItemModel);
+                return message;
             }
-
-            //TODO: Create class which will handle the result of the services
-            return null;
         }
 
-        public async Task<BudgetResponseModel> CreateBudget(CreateBudgetRequest model)
+        public async Task<Result<BudgetResponseModel>> CreateBudgetAsync(CreateBudgetRequest model)
         {
-            //TODO: Validate request model
-
-            var budgetDates = DateUtility.GetPeriodByBudgetType(model.BudgetType, model.StartDate);
-            var budgetDb = await this.budgetRepository.GetAll()
-                .FirstOrDefaultAsync(e => e.StartDate == budgetDates.Start && e.BudgetType == model.BudgetType);
-
-            if (budgetDb != null)
-            {
-                return null;
-            }
-
-            var modelToInsert = new Budget
-            {
-                Name = model.Name,
-                BudgetType = model.BudgetType,
-                StartDate = budgetDates.Start,
-                EndDate = budgetDates.End,
-                BudgetItems = new List<BudgetItem>()
-            };
-
-            if (model.CopyPrevItems)
-            { 
-                //TODO: Get the lattest budget from the same type and get its categories and add them for the new budget.
-            }
-
-            var result = await this.budgetRepository.AddAsync(modelToInsert);
-
-            //TODO: Use automapper
-            return new BudgetResponseModel
-            {
-                Id = result.Id,
-                BudgetType = result.BudgetType,
-                Name = result.Name,
-                EndDate = result.EndDate,
-                StartDate = result.StartDate
-            };
-        }
-
-        public async Task<BudgetItemModel> EditItemAsync(int budgetId, int budgetItemId, BudgetItemRequestModel budgetItemModel)
-        {
-            //TODO: validate the request model values
             try
             {
+                if (string.IsNullOrWhiteSpace(model.Name))
+                {
+                    return $"Invalid budget name.";
+                }
+
+                if (model.StartDate >= model.EndDate)
+                {
+                    return "The start date should be lower than the end date.";
+                }
+
+                var budgetDb = await this.budgetRepository
+                    .GetAll()
+                    .AnyAsync(e => e.StartDate == model.StartDate && e.EndDate == model.EndDate && e.Name == model.Name);
+
+                if (budgetDb)
+                {
+                    return $"Budget with the requested parameters ({nameof(model.StartDate)}, {nameof(model.EndDate)} and {model.Name}) already exists.";
+                }
+
+                var modelToInsert = this.mapper.Map<BudgetEntityModel>(model);
+                var result = await this.InsertBudgetAsync(modelToInsert);
+
+                return mapper.Map<BudgetResponseModel>(result);
+            }
+            catch (Exception ex)
+            {
+                var message = "Failed to create budget.";
+                this._logger.LogError(ex, message + "{0}", model);
+                return message;
+            }
+        }
+
+        public async Task<Result<BudgetResponseModel>> UpdateBudgetAsync(int id, UpdateBudgetRequest model)
+        {
+            try
+            {
+                var budgetDb = await this.budgetRepository
+                    .GetAll()
+                    .FirstOrDefaultAsync(e => e.Id == id);
+
+                if (budgetDb is null)
+                {
+                    return $"Budget does not exist. id [{id}]";
+                }
+
+                if (string.IsNullOrWhiteSpace(model.Name))
+                {
+                    return $"Invalid budget name.";
+                }
+
+                if (model.StartDate >= model.EndDate)
+                {
+                    return "The start date should be lower than the end date.";
+                }
+
+                var searchForAlreadyExistingBudget = await this.budgetRepository
+                    .GetAll()
+                    .AnyAsync(e => e.Id != id && e.StartDate == model.StartDate && e.EndDate == model.EndDate && e.Name == model.Name);
+
+                if (searchForAlreadyExistingBudget)
+                {
+                    return $"Budget with the requested parameters ({nameof(model.StartDate)}, {nameof(model.EndDate)} and {model.Name}) already exists.";
+                }
+
+                if (model.IsInUse)
+                {
+                    var budgetCurrentlyInUse = await this.budgetRepository.GetAll().FirstOrDefaultAsync(e => e.IsInUse);
+                    if (budgetCurrentlyInUse is not null && budgetCurrentlyInUse.Id != id)
+                    {
+                        budgetCurrentlyInUse.IsInUse = false;
+                        await this.budgetRepository.UpdateAsync(budgetCurrentlyInUse);
+                    }
+                }
+                budgetDb.Name = model.Name;
+                budgetDb.StartDate = model.StartDate;
+                budgetDb.EndDate = model.EndDate;
+                budgetDb.IsInUse = model.IsInUse;
+                budgetDb.BudgetType = model.BudgetType;
+
+                var result = await this.budgetRepository.UpdateAsync(budgetDb);
+
+                return mapper.Map<BudgetResponseModel>(result);
+            }
+            catch (Exception ex)
+            {
+                var message = $"Failed to update budget. id [{id}]";
+                this._logger.LogError(ex, message + "{0}", model);
+                return message;
+            }
+        }
+
+        public async Task<Result<BudgetItemModel>> EditItemAsync(int budgetId, int budgetItemId, BudgetItemRequestModel budgetItemModel)
+        {
+            try
+            {
+                if (budgetItemModel.LimitAmount < 0)
+                {
+                    return $"Limit amount cannot be lower than 0.";
+                }
+
                 var budgetItemEntity = await this.budgetItemRepository
                     .GetAll()
                     .FirstOrDefaultAsync(i => i.BudgetId == budgetId && i.Id == budgetItemId);
 
                 if (budgetItemEntity == null)
                 {
-                    return null;
+                    return $"Item with id [{budgetItemId}] not found.";
+                }
+
+                if (budgetItemEntity.TransactionCategoryId != budgetItemModel.TransactionCategoryId)
+                {
+                    var checkForDuplicatedCategories = await this.budgetItemRepository
+                         .GetAll()
+                         .AnyAsync(e => e.BudgetId == budgetId && e.TransactionCategoryId == budgetItemModel.TransactionCategoryId);
+
+                    if (checkForDuplicatedCategories)
+                    {
+                        return $"Category with id [{budgetItemModel.TransactionCategoryId}] already exists in budget with id [{budgetId}]";
+                    }
+
+                    budgetItemEntity.TransactionCategoryId = budgetItemModel.TransactionCategoryId;
                 }
 
                 budgetItemEntity.LimitAmount = budgetItemModel.LimitAmount;
-                budgetItemEntity.TransactionCategoryId = budgetItemModel.TransactionCategoryId;
 
                 var result = await this.budgetItemRepository.UpdateAsync(budgetItemEntity);
 
-                return new BudgetItemModel 
+                return new BudgetItemModel
                 {
                     Id = budgetItemId,
                     LimitAmount = budgetItemModel.LimitAmount,
@@ -184,162 +362,266 @@ namespace MoneySaver.Api.Services.Implementation
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, "Failed to edit budget item with id {0}. UserId {1}", budgetItemId, budgetItemModel);
+                var message = "Failed to edit budget item with id {0}. UserId {1}";
+                this._logger.LogError(ex, message, budgetItemId, budgetItemModel);
+                return string.Format(message, budgetItemId, budgetItemModel);
             }
-
-            return null;
         }
 
-        //TODO: Add filter object in the parametters
-        public async Task<BudgetModel> GetBudgetItems()
+        public async Task<Result<IEnumerable<BudgetItemModel>>> GetBudgetItemsAsync(int budgetId)
         {
-            //TODO: Think a better way to get the budget items and their transactions
-            var query = from budgetItem in this.budgetItemRepository.GetAll().Where(e => !e.IsDeleted)
-                        join trans in this.transactionCategory.GetAll().Where(e => !e.IsDeleted)
-                            on budgetItem.TransactionCategoryId equals trans.TransactionCategoryId
-                        select new { budgetItem, trans };
+            try
+            {
+                var result = await this.budgetItemRepository
+                    .GetAll()
+                    .Where(w => w.BudgetId == budgetId)
+                    .Select(s => new BudgetItemModel
+                    {
+                        Id = s.Id,
+                        LimitAmount = s.LimitAmount,
+                        TransactionCategoryId = s.TransactionCategoryId,
+                        TransactionCategoryName = s.TransactionCategory.Name
+                    })
+                    .ToListAsync();
 
-            var result = await query.ToListAsync();
-            var transactionCategoryIds = result.Select(s => s.trans.TransactionCategoryId);
-            var now = DateTime.UtcNow;
-            var firstDayOfTheMonth = new DateTime(now.Year, now.Month, 1);
-            var lastDayOfTheMonth = firstDayOfTheMonth.AddMonths(1).AddTicks(-1);
+                if (result == null || !result.Any())
+                {
+                    return $"Budget items in budget with id [{budgetId}] does not exists.";
+                }
 
-            var transactions = await this.transactionRepository
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var message = $"Failed to gather budget items for budget with id [{budgetId}].";
+                this._logger.LogError(ex, message);
+                return message;
+            }
+        }
+
+        public async Task<Result<bool>> RemoveItemAsync(int budgetId, int itemId)
+        {
+            try
+            {
+                BudgetItem item = await this.budgetItemRepository
                 .GetAll()
-                .Where(w => !w.IsDeleted &&
-                            w.TransactionDate >= firstDayOfTheMonth &&
-                            w.TransactionDate <= lastDayOfTheMonth)
-                .Select(s => new { TransactionCategoryId = s.TransactionCategoryId, Amount = s.Amount })
+                .FirstOrDefaultAsync(i => i.Id == itemId && i.BudgetId == budgetId);
+
+                if (item is null)
+                {
+                    return $"Budget item with id {itemId} for budget with id {budgetId} does not exist.";
+                }
+
+                item.IsDeleted = true;
+
+                await this.budgetItemRepository.SetAsDeletedAsync(item);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                var message = $"Failed to remove item with id [{itemId}] from budget with id [{budgetId}].";
+                this._logger.LogError(ex, message);
+
+                return message;
+            }
+        }
+
+        public async Task<Result<BudgetResponseModel>> GetCurrentInUseAsync()
+        {
+            try
+            {
+                var budgetInUseRequest = await this.budgetRepository.GetAll()
+                .Where(e => e.IsInUse)
                 .ToListAsync();
 
-            List<BudgetItemModel> budgetItems = new List<BudgetItemModel>();
-            foreach (var item in result)
-            {
-                var spentAmmount = transactions
-                        .Where(w => w.TransactionCategoryId == item.budgetItem.TransactionCategoryId)
-                        .Select(s => s.Amount)
-                        .Sum(m => m);
-
-                var budgetItemModel = new BudgetItemModel
+                if (budgetInUseRequest.Count > 1)
                 {
-                    Id = item.budgetItem.Id,
-                    TransactionCategoryId = item.trans.TransactionCategoryId,
-                    TransactionCategoryName = item.trans.Name,
-                    LimitAmount = item.budgetItem.LimitAmount,
-                    SpentAmount = spentAmmount
-                };
+                    this._logger.LogError($"There are more than one budget in use. userId [{this.userPackage.UserId}]");
+                    return "There are more than one budget in use.";
+                }
 
-                budgetItemModel.CalculateProgress();
+                //TODO: The below should be moved from this method.
+                //if (budgetInUseRequest.Count == 0)
+                //{
+                //    var dateTimeNow = this._dateProvider.GetDateTimeNow();
+                //    var getMonthBudgetDates = DateUtility.GetBudgetTypeNextDate(BudgetType.Monthly, dateTimeNow.AddMonths(-1));
 
-                budgetItems.Add(budgetItemModel);
-            };
+                //    var createdBudget = await this.InsertBudgetAsync(new BudgetEntityModel
+                //    {
+                //        BudgetItems = new List<BudgetItemModel>(),
+                //        BudgetType = BudgetType.Monthly,
+                //        StartDate = getMonthBudgetDates.Start,
+                //        EndDate = getMonthBudgetDates.End,
+                //        IsInUse = true,
+                //        Name = this.CreateBudgetNameByStartDate(getMonthBudgetDates.Start)
+                //    });
 
-            var budgetModel = new BudgetModel
-            {
-                BudgetItems = budgetItems.OrderBy(o => o.TransactionCategoryName).ToList(),
-                LimitAmount = budgetItems.Sum(s => s.LimitAmount),
-                TotalSpentAmmount = budgetItems.Sum(s => s.SpentAmount),
-            };
+                //    return mapper.Map<BudgetResponseModel>(createdBudget.Data);
+                //}
 
-            budgetModel.TotalLeftAmount = budgetModel.LimitAmount - budgetModel.TotalSpentAmmount;
+                //TODO: This is added to check if a new budget item is needed to be copied. This will be changed when the new feature for budget is implemented
+                //var dateTimeNow = this._dateProvider.GetDateTimeNow();
+                //if (budgetInUse.EndDate < dateTimeNow)
+                //{
+                //    var newBudgetResult = await this.CopyBudgetAsync(budgetInUse.Id, true);
+                //    if (newBudgetResult.Succeeded)
+                //    {
+                //        budgetInUse.IsCurenttlyInUse = false;
+                //        await this.budgetRepository
+                //            .UpdateAsync(budgetInUse);
 
-            return budgetModel;
-        }
+                //        return mapper.Map<BudgetResponseModel>(newBudgetResult.Data);
+                //    }
+                //}
 
+                var result = mapper.Map<BudgetResponseModel>(budgetInUseRequest.First());
 
-        public async Task<IEnumerable<BudgetItemModel>> GetBudgetItemsAsync(int budgetId)
-        {
-            var budgetDb = await this.budgetRepository.GetAll().FirstOrDefaultAsync(e => e.Id == budgetId);
-            if (budgetDb == null)
-            {
-                throw new Exception("budget not found.");
+                return result;
             }
-
-            //TODO: Think a better way to get the budget items and their transactions
-            var query = from budgetItem in this.budgetItemRepository.GetAll().Where(e => e.BudgetId == budgetId)
-                        join trans in this.transactionCategory.GetAll().Where(e => !e.IsDeleted)
-                            on budgetItem.TransactionCategoryId equals trans.TransactionCategoryId
-                        select new { budgetItem, trans };
-
-            var result = await query.ToListAsync();
-            var transactionCategoryIds = result.Select(s => s.trans.TransactionCategoryId);
-
-            var transactions = await this.transactionRepository
-                .GetAll()
-                .Where(w => transactionCategoryIds.Contains(w.TransactionCategoryId) &&
-                            w.TransactionDate >= budgetDb.StartDate &&
-                            w.TransactionDate <= budgetDb.EndDate)
-                .Select(s => new { TransactionCategoryId = s.TransactionCategoryId, Amount = s.Amount })
-                .ToListAsync();
-
-            List<BudgetItemModel> budgetItems = new List<BudgetItemModel>();
-            foreach (var item in result)
+            catch (Exception ex)
             {
-                var spentAmmount = transactions
-                        .Where(w => w.TransactionCategoryId == item.budgetItem.TransactionCategoryId)
-                        .Select(s => s.Amount)
-                        .Sum(m => m);
+                var message = $"Failed to get budget in use.";
+                this._logger.LogError(ex, message + $"User id [{this.userPackage.UserId}].");
+                return message;
+            }
+        }
 
-                var budgetItemModel = new BudgetItemModel
+        public async Task<Result<IEnumerable<BudgetItemSpentModel>>> GetSpentAmountsAsync(int budgetId)
+        {
+            try
+            {
+                var budgetItemsQuery = from budgetItem in this.budgetItemRepository.GetAll()
+                                       join budget in this.budgetRepository.GetAll()
+                                       on budgetItem.BudgetId equals budget.Id
+                                       join categoryItem in this.transactionCategory.GetAll()
+                                       on budgetItem.TransactionCategoryId equals categoryItem.TransactionCategoryId
+                                       where budgetItem.BudgetId == budgetId
+                                       select new
+                                       {
+                                           BudgetId = budgetItem.Id,
+                                           BudgetItemAmount = budgetItem.LimitAmount,
+                                           CategoryId = budgetItem.TransactionCategoryId,
+                                           CategoryName = categoryItem.Name,
+                                           BudgetStartDate = budget.StartDate,
+                                           BudgetEndDate = budget.EndDate
+                                       };
+
+                var result = await budgetItemsQuery.ToListAsync();
+                if (result == null || !result.Any())
                 {
-                    Id = item.budgetItem.Id,
-                    TransactionCategoryId = item.trans.TransactionCategoryId,
-                    TransactionCategoryName = item.trans.Name,
-                    LimitAmount = item.budgetItem.LimitAmount,
-                    SpentAmount = spentAmmount
+                    return new List<BudgetItemSpentModel>();
+                }
+
+                var budgetEntity = result.FirstOrDefault();
+                var budgetDb = new BudgetEntity(
+                    budgetId,
+                    budgetEntity.BudgetStartDate,
+                    budgetEntity.BudgetEndDate,
+                    result.Select(e => new BudgetItemEntity(e.BudgetId, e.CategoryId, e.CategoryName, e.BudgetItemAmount))
+                          .ToList()
+                    );
+
+                var spentAmountsByCategory = await this.GetSpentAmountsbyCategory(budgetDb);
+
+                return this.GetBudgetItemsResult(budgetDb.BudgetItems, spentAmountsByCategory) as List<BudgetItemSpentModel>;
+            }
+            catch (Exception ex)
+            {
+                var message = $"Failed to gather budget items for budget with id [{budgetId}].";
+                this._logger.LogError(ex, message + $"User id [{this.userPackage.UserId}]");
+                return message;
+            }
+        }
+
+        private async Task<IEnumerable<SpentAmountByCategory>> GetSpentAmountsbyCategory(BudgetEntity budgetDb)
+           => await this.transactionRepository.GetAll()
+                   .Where(w => w.TransactionDate >= budgetDb.StartDate && w.TransactionDate <= budgetDb.EndDate)
+                   .GroupBy(gr => gr.TransactionCategoryId)
+                   .Select(g => new SpentAmountByCategory(g.Key, g.Sum(s => s.Amount)))
+                   .ToListAsync();
+
+        private IEnumerable<BudgetItemSpentModel> GetBudgetItemsResult(
+            IEnumerable<BudgetItemEntity> budgetDbItems, 
+            IEnumerable<SpentAmountByCategory> spentAmountsByCategory
+            )
+        {
+            var result = new List<BudgetItemSpentModel>();
+            foreach (var budgetItem in budgetDbItems)
+            {
+                SpentAmountByCategory? spentAmountByCategory = spentAmountsByCategory
+                        .FirstOrDefault(w => w.CategoryId == budgetItem.CategoryId);
+
+                if (spentAmountByCategory is null)
+                {
+                    continue;
+                }
+
+                var budgetItemModel = new BudgetItemSpentModel
+                {
+                    Id = budgetItem.Id,
+                    TransactionCategoryId = budgetItem.CategoryId,
+                    TransactionCategoryName = budgetItem.CategoryName,
+                    LimitAmount = budgetItem.LimitAmount,
+                    SpentAmount = spentAmountByCategory.Value.Amount
                 };
 
+                //TODO: This should be removed. Calculate progress should be in the SPA app
                 budgetItemModel.CalculateProgress();
 
-                budgetItems.Add(budgetItemModel);
+                result.Add(budgetItemModel);
             };
 
-            return budgetItems;
-
-            //TODO: Remove the below, it should return only budget items
-            //var budgetModel = new BudgetModel
-            //{
-            //    BudgetItems = budgetItems.OrderBy(o => o.TransactionCategoryName).ToList(),
-            //    LimitAmount = budgetItems.Sum(s => s.LimitAmount),
-            //    TotalSpentAmmount = budgetItems.Sum(s => s.SpentAmount),
-            //};
-
-            //budgetModel.TotalLeftAmount = budgetModel.LimitAmount - budgetModel.TotalSpentAmmount;
-
-            //return budgetModel;
+            return result;
         }
 
-        public async Task RemoveItemAsync(int budgetId, int itemId)
+        private Result<bool> ValidateBudgetDate(BudgetType budgetType, DateTime startDate)
         {
-            BudgetItem item = this.budgetItemRepository.GetAll().FirstOrDefault(i => i.Id == itemId && i.BudgetId == budgetId);
-            item.IsDeleted = true;
-
-            await this.budgetItemRepository.SetAsDeletedAsync(item);
-        }
-
-        public async Task<BudgetResponseModel> GetCurrentInUseAsync()
-        {
-            var budgetInUse = await this.budgetRepository
-                .GetAll()
-                .FirstOrDefaultAsync(e => e.IsCurenttlyInUse);
-            
-            //TODO: This is added to check if a new budget item is needed to be copied. This will be changed when the new feature for budget is implemented
-            var dateTimeNow = DateTime.UtcNow;
-
-            if (budgetInUse.EndDate < dateTimeNow)
+            if (budgetType == BudgetType.Monthly)
             {
-                var newBudgetResult = await this.CopyBudgetAsync(budgetInUse.Id, true);
-                if (newBudgetResult.Succeeded)
+                if (startDate.Day != 1)
                 {
-                    budgetInUse.IsCurenttlyInUse = false;
-                    await this.budgetRepository.UpdateAsync(budgetInUse);
-
-                    return mapper.Map<BudgetResponseModel>(newBudgetResult.Data);
+                    return $"The start date should be the first day of the month.";
                 }
             }
 
-            return mapper.Map<BudgetResponseModel>(budgetInUse);
+            if (budgetType == BudgetType.Yearly)
+            {
+                if (startDate.Month != 1)
+                {
+                    return $"The start date should be the first month of the year.";
+                }
+
+                if (startDate.Day != 1)
+                {
+                    return $"The start date should be the first day of the month.";
+                }
+            }
+
+            if (budgetType == BudgetType.Weekly)
+            {
+                if (startDate.DayOfWeek != DayOfWeek.Monday)
+                {
+                    return $"The start date should be the first day of the week.";
+                }
+            }
+
+            return true;
         }
+
+        private async Task<Result<BudgetEntityModel>> InsertBudgetAsync(BudgetEntityModel budgetModel)
+        {
+            var modelToInsert = this.mapper.Map<Budget>(budgetModel);
+            var result = await this.budgetRepository.AddAsync(modelToInsert);
+
+            return mapper.Map<BudgetEntityModel>(result);
+        }
+
+        private string CreateBudgetNameByStartDate(DateTime startDate)
+            => startDate.ToString("MM") + "-" + startDate.ToString("yyy");
     }
+
+    public readonly record struct SpentAmountByCategory(int CategoryId, double Amount);
+    public readonly record struct BudgetEntity(int Id, DateTime StartDate, DateTime EndDate, IEnumerable<BudgetItemEntity> BudgetItems);
+    public readonly record struct BudgetItemEntity(int Id, int CategoryId, string CategoryName, double LimitAmount);
 }
