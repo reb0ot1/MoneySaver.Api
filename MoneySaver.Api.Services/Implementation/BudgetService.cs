@@ -12,7 +12,6 @@ using MoneySaver.Api.Services.Utilities;
 using MoneySaver.System.Services;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -248,7 +247,7 @@ namespace MoneySaver.Api.Services.Implementation
                 var modelToInsert = this.mapper.Map<BudgetEntityModel>(model);
                 var result = await this.InsertBudgetAsync(modelToInsert);
 
-                return mapper.Map<BudgetResponseModel>(result);
+                return mapper.Map<BudgetResponseModel>(result.Data);
             }
             catch (Exception ex)
             {
