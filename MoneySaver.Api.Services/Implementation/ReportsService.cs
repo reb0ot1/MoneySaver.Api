@@ -37,17 +37,20 @@ namespace MoneySaver.Api.Services.Implementation
         }
 
         //TODO: Add filter parameter
+        //TODO: Change the return type
         public async Task<LineChartData> GetExpensesByPeriod(FilterModel filter)
         {
+            //TODO: By default the resulst are in montly time frame. Should change that.
+            //TODO: Get the budget in use
             var startEndDates = DateUtility.GetStartEndDateByMonthInterval(filter.From, filter.To);
 
-            var dateTime = startEndDates.Item2.Date;
-            var testDateTime = startEndDates.Item1;
+            var dateTime = startEndDates.End.Date;
+            var mutableDateTime = startEndDates.Start;
             var allPeriods = new List<string>();
-            while (testDateTime <= dateTime)
+            while (mutableDateTime <= dateTime)
             {
-                allPeriods.Add($"{testDateTime.Month}/{testDateTime.Year}");
-                testDateTime = testDateTime.AddMonths(1);
+                allPeriods.Add($"{mutableDateTime.Month}/{mutableDateTime.Year}");
+                mutableDateTime = mutableDateTime.AddMonths(1);
             }
 
             var dataContainer = new LineChartData { Categories = allPeriods.ToArray(), Series = new List<SeriesItem>()};
@@ -68,6 +71,7 @@ namespace MoneySaver.Api.Services.Implementation
                         Id = string.Format("{0}/{1}", g.Key.Month, g.Key.Year),
                         Amount = g.Sum(a => a.Amount)
                     });
+
                 var result = await query.ToListAsync();
 
                 for (int i = 0; i < allPeriods.Count; i++)
@@ -87,6 +91,7 @@ namespace MoneySaver.Api.Services.Implementation
             return dataContainer;
         }
 
+        //TODO: Change the return type
         public async Task<LineChartData> GetExpensesForPeriodByCategoriesAsync(FilterModel filter)
         {
             var dataItems = new LineChartData();
@@ -139,22 +144,25 @@ namespace MoneySaver.Api.Services.Implementation
                 foreach (var usedCategory in usedCategories)
                 {
                     var categorySerie = new SeriesItem();
-                    var data = new List<double?>();
+                    var data = new double?[allPeriods.Count];
                     for (int i = 0; i < allPeriods.Count; i++)
                     {
                         var categoryData = result.FirstOrDefault(e => e.Id == allPeriods[i] && e.Entity.Any(a => a.CategoryId == usedCategory.Id));
                         if (categoryData != null)
                         {
-                            data.Add(categoryData.Entity.Where(e => e.CategoryId == usedCategory.Id).Sum(s => s.SpentAmount));
+                            data[i] = categoryData.Entity
+                                .Where(e => e.CategoryId == usedCategory.Id)
+                                .Sum(s => s.SpentAmount);
+                            //data.Add(categoryData.Entity.Where(e => e.CategoryId == usedCategory.Id).Sum(s => s.SpentAmount));
                         }
-                        else
-                        {
-                            data.Add(null);
-                        }
+                        //else
+                        //{
+                        //    data.Add(null);
+                        //}
                     }
 
                     categorySerie.Name = usedCategory.Name;
-                    categorySerie.Data = data.ToArray();
+                    categorySerie.Data = data;
 
                     dataItems.Series.Add(categorySerie);
                 }
@@ -167,11 +175,12 @@ namespace MoneySaver.Api.Services.Implementation
             return dataItems;
         }
 
-        public async Task<List<DataItem>> GetExpensesPerCategoryAsync(FilterModel filter)
+        //TODO: Change the return type
+        public async Task<System.Services.Result<List<DataItem>>> GetExpensesPerCategoryAsync(FilterModel filter)
         {
-            var dataItems = new List<DataItem>();
             try
             {
+                var dataItems = new List<DataItem>();
                 var startEndDates = DateUtility.GetStartEndDateByMonthInterval(filter.From, filter.To);
 
                 var query = from transactionItem in this.transactionRepository.GetAll()
@@ -211,18 +220,24 @@ namespace MoneySaver.Api.Services.Implementation
 
                     dataItems.Add(dataItem);
                 }
+
+                return dataItems;
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, $"Failed to get expenses request. UserId {this.userPackage.UserId}", filter);
-            }
+                var message = "Failed to get expenses request.";
+                this.logger.LogError(ex, message + " UserId {0}. Filters: {1}", this.userPackage.UserId, filter);
 
-            return dataItems;
+                return message;
+            }
         }
 
+        //TODO: Change the return type
         public async Task<IEnumerable<IdValue<double?>>> SpentAmountPerCategorieAsync(PageRequest pageRequest)
         {
-            var query = this.transactionRepository
+            try
+            {
+                var query = this.transactionRepository
                     .GetAll()
                     .Where(e => e.TransactionDate >= pageRequest.Filter.From && e.TransactionDate <= pageRequest.Filter.To)
                     .GroupBy(gb => gb.TransactionCategoryId)
@@ -233,14 +248,20 @@ namespace MoneySaver.Api.Services.Implementation
                     })
                     .OrderByDescending(e => e.Value);
 
-            var result = await query.ToListAsync();
-            
-            if (pageRequest.ItemsPerPage > 0)
+                var result = await query.ToListAsync();
+
+                if (pageRequest.ItemsPerPage > 0)
+                {
+                    return result.Take(pageRequest.ItemsPerPage);
+                }
+            }
+            catch (Exception ex)
             {
-                return result.Take(pageRequest.ItemsPerPage);
+                var message = "Failed to get spent amount per category.";
+                this.logger.LogError(ex, message);
             }
 
-            return result;
+            return new List<IdValue<double?>>();
         }
     }
 }

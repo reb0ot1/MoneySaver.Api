@@ -618,9 +618,9 @@ namespace MoneySaver.Api.Services.Implementation
 
         private string CreateBudgetNameByStartDate(DateTime startDate)
             => startDate.ToString("MM") + "-" + startDate.ToString("yyy");
-    }
 
-    public readonly record struct SpentAmountByCategory(int CategoryId, double Amount);
-    public readonly record struct BudgetEntity(int Id, DateTime StartDate, DateTime EndDate, IEnumerable<BudgetItemEntity> BudgetItems);
-    public readonly record struct BudgetItemEntity(int Id, int CategoryId, string CategoryName, double LimitAmount);
+        private readonly record struct SpentAmountByCategory(int CategoryId, double Amount);
+        private readonly record struct BudgetEntity(int Id, DateTime StartDate, DateTime EndDate, IEnumerable<BudgetItemEntity> BudgetItems);
+        private readonly record struct BudgetItemEntity(int Id, int CategoryId, string CategoryName, double LimitAmount);
+    }
 }

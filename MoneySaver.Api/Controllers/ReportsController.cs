@@ -5,6 +5,7 @@ using MoneySaver.Api.Models.Reports;
 using MoneySaver.Api.Models.Request;
 using MoneySaver.Api.Services.Contracts;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MoneySaver.Api.Controllers
@@ -24,9 +25,13 @@ namespace MoneySaver.Api.Controllers
         [HttpPost("expenses")]
         public async Task<IActionResult> GetExpensesByCategory(FilterModel filter)
         {
-            IEnumerable<DataItem> result = await this.reportsService.GetExpensesPerCategoryAsync(filter);
+            var result = await this.reportsService.GetExpensesPerCategoryAsync(filter);
+            if (result.Errors.Any())
+            {
+                return this.BadRequest(result.Errors.First());
+            }
 
-            return this.Ok(result);
+            return this.Ok(result.Data);
         }
 
         [HttpPost("expensesperiod")]
