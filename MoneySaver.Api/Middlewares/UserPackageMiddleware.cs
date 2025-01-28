@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using MoneySaver.Api.Models;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -21,11 +22,7 @@ namespace MoneySaver.Api.Middlewares
         {
             if (httpContext.User.Identity is ClaimsIdentity identity)
             {
-                var userId = identity.FindFirst("sub")?.Value;
-                if (userId == null)
-                {
-                    userId = identity.FindFirst("nameid")?.Value;
-                }
+                var userId = identity.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
                 userPackage.UserId = userId;
             }

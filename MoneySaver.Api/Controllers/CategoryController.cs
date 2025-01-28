@@ -65,8 +65,8 @@ namespace MoneySaver.Api.Controllers
             var result = await this.categoryService.CreateCategoryAsync(transactionCategoryModel);
 
             if (result.Succeeded)
-            { 
-               return this.Ok(result.Data);
+            {
+                return this.Ok(result.Data);
             }
 
             return this.BadRequest(result.Errors);

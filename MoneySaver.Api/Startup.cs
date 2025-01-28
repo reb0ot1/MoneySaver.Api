@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Logging;
 using MoneySaver.Api.Data;
 using MoneySaver.Api.Data.Repositories;
 using MoneySaver.Api.Middlewares;
@@ -21,9 +22,11 @@ namespace MoneySaver.Api
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            // IdentityModelEventSource.ShowPII = true;
             Log.Logger = new LoggerConfiguration()
               .ReadFrom.Configuration(this.Configuration)
               .CreateLogger();
+            
         }
 
         public IConfiguration Configuration { get; }
