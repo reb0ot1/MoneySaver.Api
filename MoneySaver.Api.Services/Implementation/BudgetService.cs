@@ -571,7 +571,7 @@ namespace MoneySaver.Api.Services.Implementation
                 result.Add(budgetItemModel);
             };
 
-            return result;
+            return result.OrderBy((e => e.TransactionCategoryName)).ToList();
         }
 
         private Result<bool> ValidateBudgetDate(BudgetType budgetType, DateTime startDate)

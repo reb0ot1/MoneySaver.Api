@@ -131,6 +131,7 @@ namespace MoneySaver.API.Test.IntegrationTests
 
             //Assert
             Assert.NotNull(testResult);
+            Assert.NotNull(testResult.Data);
             Assert.NotNull(testResult.Data.FirstOrDefault(e => e.Id == category1Id));
             Assert.Equal(10, testResult.Data.FirstOrDefault(e => e.Id == category1Id).SpentAmount);
             Assert.NotNull(testResult.Data.FirstOrDefault(e => e.Id == category2Id));

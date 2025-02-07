@@ -56,7 +56,7 @@ namespace MoneySaver.Api.Controllers
             return this.Ok(result);
         }
 
-        [HttpGet("remove/{id}")]
+        [HttpDelete("remove/{id}")]
         public async Task<IActionResult> RemoveTransaction(Guid id)
         {
             //TODO: Add check for return bad request if needed
