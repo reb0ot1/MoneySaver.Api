@@ -473,8 +473,13 @@ namespace MoneySaver.Api.Services.Implementation
                 //        return mapper.Map<BudgetResponseModel>(newBudgetResult.Data);
                 //    }
                 //}
+                var budgetInUse = budgetInUseRequest.FirstOrDefault();
+                if (budgetInUse == null)
+                {
+                    return Result<BudgetResponseModel>.SuccessWith(new BudgetResponseModel());
+                }
 
-                var result = mapper.Map<BudgetResponseModel>(budgetInUseRequest.First());
+                var result = mapper.Map<BudgetResponseModel>(budgetInUseRequest.FirstOrDefault());
 
                 return result;
             }

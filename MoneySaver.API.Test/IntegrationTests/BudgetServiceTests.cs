@@ -13,7 +13,7 @@ namespace MoneySaver.API.Test.IntegrationTests
         {
            this.budgetContext = context;
         }
-
+        
         [Fact]
         public async void BudgetService_CreateBudget_ReturnBudget()
         {
@@ -28,7 +28,7 @@ namespace MoneySaver.API.Test.IntegrationTests
                 BudgetType = Api.Models.BudgetType.Monthly,
                 Name = string.Format("Budget-Name-{0}", Guid.NewGuid().ToString()),
                 StartDate = monthStart,
-                EndDate = monthStart.AddMonths(1).AddTicks(-1)
+                EndDate = monthStart.AddMonths(1).AddTicks(-1) 
             };
 
             var service = this.budgetContext.GetBudgetService;
