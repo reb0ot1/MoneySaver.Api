@@ -62,7 +62,7 @@ namespace MoneySaver.Api.Services.Implementation
                 var transactionsQuery = this.FilterBySearchContent(this.transactionRepository
                                                                     .GetAll()
                                                                     .OrderByDescending(e => e.TransactionDate),
-                                                                   pageRequest.Filter.SearchText);
+                                                                   pageRequest.Filter?.SearchText);
 
                 var totalRecords = await transactionsQuery
                     .CountAsync();

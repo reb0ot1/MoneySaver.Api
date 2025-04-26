@@ -1,17 +1,22 @@
-﻿using MoneySaver.Api.Models.Budget;
+﻿using AutoMapper.Configuration.Annotations;
+using MoneySaver.Api.Data;
+using MoneySaver.Api.Models;
+using MoneySaver.Api.Models.Budget;
 using MoneySaver.Api.Models.Request;
 using MoneySaver.API.Test.SeedData;
 
 namespace MoneySaver.API.Test.IntegrationTests
 {
     [Collection(nameof(BudgetCollection))]
-    public class BudgetServiceTests //: IClassFixture<BudgetContext>
+    public class BudgetServiceTests : IClassFixture<BudgetContext>
     {
         private readonly BudgetContext budgetContext;
 
         public BudgetServiceTests(BudgetContext context)
         {
            this.budgetContext = context;
+           budgetContext.ClearDataAsync().GetAwaiter().GetResult();
+           budgetContext.SeedData().GetAwaiter().GetResult();
         }
         
         [Fact]
@@ -74,19 +79,32 @@ namespace MoneySaver.API.Test.IntegrationTests
         public async void BudgetService_AddBudgetItem_ReturnBudgetItem()
         {
             //Arrange
-            var budgetIdToUse = 2;
+            var service = this.budgetContext.GetBudgetService;
+            var categoryService = this.budgetContext.GetTransactionCategoryService;
+            var budgetItemsService = this.budgetContext.GetBudgetItemsService;
+            var budgetPage = await service.GetBudgetsPerPageAsync(1, 1);
+            var budget = budgetPage.Data.Result.FirstOrDefault();
+            var items = await budgetItemsService.GetItemsAsync(budget.Id);
+            var initialCount = items.Count();
+            
+            var categoryToAdd =  new TransactionCategoryModel
+            {
+                Name = "Test category",
+            };
 
+            var categoryCreated = await categoryService.CreateCategoryAsync(categoryToAdd);
+            
             var budgetItemToAdd = new BudgetItemModel
             {
                 LimitAmount = 300,
-                TransactionCategoryId = 3
+                TransactionCategoryId = (int)categoryCreated.Data.TransactionCategoryId
             };
-
-            var service = this.budgetContext.GetBudgetService;
 
             //Act
             var res = await service
-                .AddItemAsync(budgetIdToUse, budgetItemToAdd);
+                .AddItemAsync(budget.Id, budgetItemToAdd);
+            
+            var itemsUpdated = await budgetItemsService.GetItemsAsync(budget.Id);
 
             //Assert
             Assert.NotNull(res);
@@ -94,36 +112,101 @@ namespace MoneySaver.API.Test.IntegrationTests
             Assert.NotEqual(res.Data.Id, 0);
             Assert.Equal(res.Data.LimitAmount, budgetItemToAdd.LimitAmount);
             Assert.Equal(res.Data.TransactionCategoryId, budgetItemToAdd.TransactionCategoryId);
+            Assert.Equal(initialCount + 1, itemsUpdated.Count());
         }
 
+        // [Fact(Skip="Will need to be changed")]
         [Fact]
-        public async void BudgetService_CopyBydget_ReuturnBudget()
+        public async void BudgetService_CopyBydget_ReturnBudget()
         {
             //Arrange
-            var budgetToCopyId = 1;
             var nowDate = this.budgetContext.GetDateProvider().GetDateTimeNow();
+            var startDate = new DateTime(nowDate.Year, nowDate.Month, 1);
+            var endDate = new DateTime(nowDate.Year, nowDate.Month, 1).AddMonths(1).AddTicks(-1);
+            
+            var service = this.budgetContext.GetBudgetService;
+            var budgetItemsService = this.budgetContext.GetBudgetItemsService;
+            var budgetFromPage = await service.GetBudgetsPerPageAsync(1, 1);
+            var budgetToUseFromPage = budgetFromPage.Data.Result.FirstOrDefault();
+            var initialBudgetItems = await budgetItemsService.GetItemsAsync(budgetToUseFromPage.Id);
 
             //Act
-            var testResult = await this.budgetContext
+            var copiedBudget = await this.budgetContext
                 .GetBudgetService
-                .CopyBudgetAsync(budgetToCopyId, true);
-
+                .CopyBudgetAsync(budgetToUseFromPage.Id, true);
+            
             //Assert
-            Assert.NotNull(testResult);
-            Assert.NotNull(testResult.Data);
-            Assert.True(testResult.Data.IsInUse);
-            Assert.Equal(testResult.Data.StartDate, new DateTime(nowDate.Year, nowDate.Month, 1));
-            Assert.Equal(testResult.Data.EndDate, new DateTime(nowDate.Year, nowDate.Month, 1).AddMonths(1).AddTicks(-1));
+            Assert.NotNull(copiedBudget);
+            Assert.NotNull(copiedBudget.Data);
+            Assert.True(copiedBudget.Data.IsInUse);
+            Assert.Equal(startDate,copiedBudget.Data.StartDate);
+            Assert.Equal(endDate, copiedBudget.Data.EndDate);
+            Assert.Equal(initialBudgetItems.Count(), copiedBudget.Data.BudgetItems.Count());
         }
 
         [Fact]
         public async void BudgetService_GetBudgetItems_ReturnBudgetItems()
         {
             //Arrange
-            var budgetToUseId = 1;
-            var category1Id = 1;
-            var category2Id = 2;
+            var service = this.budgetContext.GetBudgetService;
+            var categoryService = this.budgetContext.GetTransactionCategoryService;
+            var budgetItemsService = this.budgetContext.GetBudgetItemsService;
+            var transactionService = this.budgetContext.GetTransactionService;
+            var budgetPage = await service.GetBudgetsPerPageAsync(1, 1);
+            var budget = budgetPage.Data.Result.FirstOrDefault();
+            var budgetToUseId = budget.Id;
+            var items = await budgetItemsService.GetItemsAsync(budget.Id);
+            var initialCount = items.Count();
+            
+            var categoryToAddFirst =  new TransactionCategoryModel
+            {
+                Name = "Test category",
+            };
+            
+            var categoryToAddSecond =  new TransactionCategoryModel
+            {
+                Name = "Test category2",
+            };
 
+            var categoryFirst = await categoryService.CreateCategoryAsync(categoryToAddFirst);
+            var categorySecond = await categoryService.CreateCategoryAsync(categoryToAddSecond);
+            int category1Id = (int)categoryFirst.Data.TransactionCategoryId;
+            int category2Id = (int)categorySecond.Data.TransactionCategoryId;
+            var itemToAddFirst =  new BudgetItemModel
+            {
+                LimitAmount = 200,
+                TransactionCategoryId = category1Id 
+            };
+            
+            var itemToAddSecond =  new BudgetItemModel
+            {
+                LimitAmount = 300,
+                TransactionCategoryId = category2Id
+            };
+            
+            var budgetItemFirstAdded = await service
+                .AddItemAsync(budget.Id, itemToAddFirst);
+            
+            var budgetItemSecondAdded = await service
+                .AddItemAsync(budget.Id, itemToAddSecond);
+
+            var transactionToAddFirst = new TransactionModel
+            {
+                Amount = 10,
+                TransactionCategoryId = category1Id,
+                TransactionDate = DateTime.UtcNow.AddMonths(-1),
+            };
+            
+            var transactionToAddSecond = new TransactionModel
+            {
+                Amount = 30,
+                TransactionCategoryId = category2Id,
+                TransactionDate = DateTime.UtcNow.AddMonths(-1),
+            };
+
+            await transactionService.CreateTransactionAsync(transactionToAddFirst);
+            await transactionService.CreateTransactionAsync(transactionToAddSecond);
+            
             //Act
             var testResult = await this.budgetContext
                 .GetBudgetService
@@ -132,11 +215,11 @@ namespace MoneySaver.API.Test.IntegrationTests
             //Assert
             Assert.NotNull(testResult);
             Assert.NotNull(testResult.Data);
-            Assert.NotNull(testResult.Data.FirstOrDefault(e => e.Id == category1Id));
-            Assert.Equal(10, testResult.Data.FirstOrDefault(e => e.Id == category1Id).SpentAmount);
-            Assert.NotNull(testResult.Data.FirstOrDefault(e => e.Id == category2Id));
-            Assert.Equal(30, testResult.Data.FirstOrDefault(e => e.Id == category2Id).SpentAmount);
-            Assert.Equal(3, testResult.Data.Count());
+            Assert.NotNull(testResult.Data.FirstOrDefault(e => e.TransactionCategoryId == category1Id));
+            Assert.Equal(transactionToAddFirst.Amount, testResult.Data.FirstOrDefault(e => e.TransactionCategoryId == category1Id).SpentAmount);
+            Assert.NotNull(testResult.Data.FirstOrDefault(e => e.TransactionCategoryId == category2Id));
+            Assert.Equal(transactionToAddSecond.Amount, testResult.Data.FirstOrDefault(e => e.TransactionCategoryId == category2Id).SpentAmount);
+            Assert.Equal(initialCount + 2, testResult.Data.Count());
             Assert.True(testResult.Data.All(e => !string.IsNullOrEmpty(e.TransactionCategoryName)));
         }
 
@@ -144,74 +227,126 @@ namespace MoneySaver.API.Test.IntegrationTests
         public async void BudgetService_RemoveItem()
         {
             //Arrange
-            var budgetToUseId = 1;
-            var categoryItemToRepomoId = 3;
-            var itemsCount = 2;
+            var service = this.budgetContext.GetBudgetService;
+            var categoryService = this.budgetContext.GetTransactionCategoryService;
+            var budgetItemsService = this.budgetContext.GetBudgetItemsService;
+            var budgetPage = await service.GetBudgetsPerPageAsync(1, 1);
+            var budget = budgetPage.Data.Result.FirstOrDefault();
+            var budgetToUseId = budget.Id;
+            var items = await budgetItemsService.GetItemsAsync(budget.Id);
+            var initialCount = items.Count();
 
+            var categoryToAdd =  new TransactionCategoryModel
+            {
+                Name = "Test category",
+            };
+
+            var categoryCreated = await categoryService.CreateCategoryAsync(categoryToAdd);
+            
+            var budgetItemToAdd = new BudgetItemModel
+            {
+                LimitAmount = 300,
+                TransactionCategoryId = (int)categoryCreated.Data.TransactionCategoryId
+            };
+
+            var res = await service
+                .AddItemAsync(budget.Id, budgetItemToAdd);
+            
+            var itemsUpdated = await budgetItemsService.GetItemsAsync(budget.Id);
+            var itemCountAfterAddedNewItem = itemsUpdated.Count();
+            
             //Act
             await this.budgetContext.GetBudgetService
-                .RemoveItemAsync(budgetToUseId, categoryItemToRepomoId);
+                .RemoveItemAsync(budgetToUseId, res.Data.Id);
 
             var budgetUpdated = await this.budgetContext.GetBudgetEntityAsync(budgetToUseId);
-            var budgetItemDeleted = budgetUpdated.BudgetItems.FirstOrDefault(e => e.TransactionCategoryId == categoryItemToRepomoId);
+            var budgetItemDeleted = budgetUpdated.BudgetItems.FirstOrDefault(e => e.TransactionCategoryId == budgetItemToAdd.TransactionCategoryId);
             
             //Assert
             Assert.NotNull(budgetItemDeleted);
             Assert.True(budgetItemDeleted.IsDeleted);
-            Assert.Equal(budgetUpdated.BudgetItems.Count(e => !e.IsDeleted), itemsCount);
+            Assert.Equal(initialCount, budgetUpdated.BudgetItems.Count(e => !e.IsDeleted));
+
         }
 
         [Fact]
         public async void BudgetService_GetBudgetInUse_ReturnOneBudgetInUse()
         {
             //Arrange
-            var budgetToUseId = 3;
-            var now = this.budgetContext.GetDateProvider().GetDateTimeNow();
-            var startMonth = new DateTime(now.Year, now.Month, 1);
-            var endMonth = startMonth.AddMonths(1).AddTicks(-1);
-            var budgetName = startMonth.ToString("MM") + "-" + endMonth.ToString("yyy");
+            var service = this.budgetContext.GetBudgetService;
+            var budgetPage = await service.GetBudgetsPerPageAsync(1, 2);
+            var budgetNotInUse = budgetPage.Data.Result.FirstOrDefault(e => !e.IsInUse);
 
+            var budgetUpdateRequest = new UpdateBudgetRequest
+            {
+                BudgetType = budgetNotInUse.BudgetType,
+                StartDate = budgetNotInUse.StartDate,
+                EndDate = budgetNotInUse.EndDate,
+                Name = budgetNotInUse.Name,
+                IsInUse = true
+            };
+            
+            var updateBudgetRequestResult = await service.UpdateBudgetAsync(budgetNotInUse.Id, budgetUpdateRequest);
+    
             //Act
-            var budgetInUse = await this.budgetContext.GetBudgetService
+            var budgetInUseResult = await service
                 .GetCurrentInUseAsync();
 
             //Assert
-            Assert.NotNull(budgetInUse);
-            Assert.True(budgetInUse.Succeeded);
-            Assert.Equal(budgetInUse.Data.Id, budgetToUseId);
-            Assert.Equal(budgetInUse.Data.Name, budgetName);
-            Assert.Equal(budgetInUse.Data.StartDate, startMonth);
-            Assert.Equal(budgetInUse.Data.EndDate, endMonth);
+            Assert.NotNull(budgetInUseResult);
+            Assert.True(budgetInUseResult.Succeeded);
+            Assert.Equal(budgetInUseResult.Data.Id, budgetNotInUse.Id);
+            Assert.Equal(budgetInUseResult.Data.Name, budgetNotInUse.Name);
+            Assert.Equal(budgetInUseResult.Data.StartDate, budgetNotInUse.StartDate);
+            Assert.Equal(budgetInUseResult.Data.EndDate, budgetNotInUse.EndDate);
         }
 
         [Fact]
         public async void BudgetService_EditBudgetItem_ReturnUpdatedBudgetItem()
         {
             //Arrange
-            var budgetToUseId = 2;
-            var ItemToUpdateId = 5;
-            var categoryToUpdateId = 3;
-            var categoryToBeUpdatedId = 2;
+            var service = this.budgetContext.GetBudgetService;
+            var categoryService = this.budgetContext.GetTransactionCategoryService;
+            var budgetPage = await service.GetBudgetsPerPageAsync(1, 2);
+            var budgetToUse = budgetPage.Data.Result.FirstOrDefault();
+            var budgetToUseId = budgetToUse.Id;
+            var budgetItems = service.GetBudgetItemsAsync(budgetToUseId);
+            var itemToUpdate = budgetItems.Result.Data.FirstOrDefault();
+            var newLimitAmount = itemToUpdate.LimitAmount + 100;
+            var categoryToAdd =  new TransactionCategoryModel
+            {
+                Name = "Test category",
+            };
 
+            var categoryCreated = await categoryService.CreateCategoryAsync(categoryToAdd);
+            
             var modelForUpdate = new BudgetItemRequestModel
             {
-                LimitAmount = 500,
-                TransactionCategoryId = categoryToUpdateId
+                LimitAmount = newLimitAmount,
+                TransactionCategoryId = categoryCreated.Data.TransactionCategoryId.Value
             };
 
             //Act
-            var budgetInUse = await this.budgetContext.GetBudgetService
-                .EditItemAsync(budgetToUseId, ItemToUpdateId, modelForUpdate);
+            var updatedBudgetItemRequest = await service
+                .EditItemAsync(budgetToUseId, itemToUpdate.Id, modelForUpdate);
 
             var budget = await this.budgetContext.GetBudgetEntityAsync(budgetToUseId);
-
+            var updatedItem = budget.BudgetItems.FirstOrDefault(e =>
+                e.TransactionCategoryId == categoryCreated.Data.TransactionCategoryId.Value);
+            
             //Assert
-            Assert.NotNull(budgetInUse);
-            Assert.True(budgetInUse.Succeeded);
-            Assert.Equal(budgetInUse.Data.LimitAmount, modelForUpdate.LimitAmount);
-            Assert.Equal(budgetInUse.Data.TransactionCategoryId, modelForUpdate.TransactionCategoryId);
-            Assert.Null(budget.BudgetItems.FirstOrDefault(x => x.TransactionCategoryId == categoryToBeUpdatedId));
-            Assert.NotNull(budget.BudgetItems.FirstOrDefault(x => x.TransactionCategoryId == categoryToUpdateId));
+            Assert.NotNull(updatedBudgetItemRequest);
+            Assert.True(updatedBudgetItemRequest.Succeeded);
+            Assert.Equal(updatedBudgetItemRequest.Data.LimitAmount, modelForUpdate.LimitAmount);
+            Assert.Equal(updatedBudgetItemRequest.Data.TransactionCategoryId, modelForUpdate.TransactionCategoryId);
+            Assert.NotNull(updatedItem);
+            Assert.Equal(newLimitAmount, updatedItem.LimitAmount);
+            Assert.Null(budget.BudgetItems.FirstOrDefault(x => x.TransactionCategoryId == itemToUpdate.TransactionCategoryId));
         }
+
+        // public void Dispose()
+        // {
+        // }
+
     }
 }

@@ -10,6 +10,8 @@ namespace MoneySaver.API.Test.IntegrationTests
         public CategoryServiceTests(CategoryContext context)
         {
             this._context = context;
+            this._context.ClearDataAsync().GetAwaiter().GetResult();
+            this._context.SeedDataAsync().GetAwaiter().GetResult();
         }
 
         [Fact]
@@ -17,63 +19,80 @@ namespace MoneySaver.API.Test.IntegrationTests
         {
             //Arrange
             var categoryService = this._context.GetService();
-
-            //Act
             var allCategories = await categoryService.GetAllCategoriesAsync();
-
+            var initialCount = allCategories.Data.Count();
+            var newCategory =  new TransactionCategoryModel
+            {
+                Name = "Test category2",
+            };
+            
+            //Act
+            await categoryService.CreateCategoryAsync(newCategory);
+            var allCategoriesAfterUpdate = await categoryService.GetAllCategoriesAsync();
+            
             //Assert
-            Assert.NotNull(allCategories);
-            Assert.NotNull(allCategories.Succeeded);
-            Assert.Equal(allCategories.Data.Count(), 2);
+            Assert.NotNull(allCategoriesAfterUpdate);
+            Assert.NotNull(allCategoriesAfterUpdate.Succeeded);
+            Assert.Equal(initialCount + 1, allCategoriesAfterUpdate.Data.Count());
         }
 
         [Fact]
         public async void CheckValidName_WhenCallingAllCategories()
         {
             //Arrange
-            var catIdToCheck = 3;
+            var parentCategoryName = "TestCat1";
             var categoryService = this._context.GetService();
-
-            //Act
             var allCategories = await categoryService.GetAllCategoriesAsync();
-            var catToCheck = allCategories.Data?.FirstOrDefault(e => e.TransactionCategoryId == catIdToCheck);
-
+            var initialCount = allCategories.Data.Count();
+            var catToCheck = allCategories.Data?.FirstOrDefault(e => e.Name == parentCategoryName);
+            var newCategory =  new TransactionCategoryModel
+            {
+                Name = "Test Child Category",
+                ParentId = catToCheck?.TransactionCategoryId
+            };
+            
+            //Act
+            var createdCategory = await categoryService.CreateCategoryAsync(newCategory);
+            var allCategoriesUpdated = await categoryService.GetAllCategoriesAsync();
+            var searchedCategory = allCategoriesUpdated.Data.FirstOrDefault(e => e.TransactionCategoryId == createdCategory.Data.TransactionCategoryId);
+            
             //Assert
-            Assert.NotNull(catToCheck);
-            Assert.Equal(catToCheck.TransactionCategoryId, catIdToCheck);
-            Assert.Equal(catToCheck.ParentId, 1);
-            Assert.Equal(catToCheck.Name, "TestCat3");
+            Assert.NotNull(searchedCategory);
+            Assert.Equal(newCategory.Name, searchedCategory.Name);
+            Assert.Equal(catToCheck.TransactionCategoryId, searchedCategory.ParentId);
+            Assert.Equal(initialCount + 1, allCategoriesUpdated.Data.Count());
         }
 
         [Fact]
         public async void GetCategory_ById()
         {
             //Arrange
-            var catIdToCheck = 3;
             var categoryService = this._context.GetService();
-
+            var allCategories = categoryService.GetAllCategoriesAsync();
+            var randomCategory = allCategories.Result.Data.FirstOrDefault();
+            
             //Act
-            var searchedCategory = await categoryService.GetCategoryAsync(catIdToCheck);
+            var searchedCategory = await categoryService.GetCategoryAsync(randomCategory.TransactionCategoryId.Value);
 
             //Assert
             Assert.NotNull(searchedCategory);
             Assert.NotNull(searchedCategory.Succeeded);
-            Assert.Equal(searchedCategory.Data.TransactionCategoryId, catIdToCheck);
-            Assert.Equal(searchedCategory.Data.Name, "TestCat3");
+            Assert.Equal(randomCategory.TransactionCategoryId.Value, searchedCategory.Data.TransactionCategoryId);
+            Assert.Equal(randomCategory.Name, searchedCategory.Data.Name);
         }
 
         [Fact]
         public async void UpdateCategory_ById()
         {
             //Arrange
-            var catIdToCheck = 3;
-            var parrentId = 4;
             var categoryService = this._context.GetService();
+            var allCategories = await categoryService.GetAllCategoriesAsync();
+            var randomCategory = allCategories.Data.FirstOrDefault();
             var modelForUpdate = new TransactionCategoryModel
             {
                 Name = "Updated name",
-                TransactionCategoryId = catIdToCheck,
-                ParentId = parrentId
+                TransactionCategoryId = randomCategory.TransactionCategoryId.Value,
+                ParentId = randomCategory.ParentId
             };
 
             //Act
@@ -82,9 +101,9 @@ namespace MoneySaver.API.Test.IntegrationTests
             //Assert
             Assert.NotNull(searchedCategory);
             Assert.NotNull(searchedCategory.Succeeded);
-            Assert.Equal(searchedCategory.Data.TransactionCategoryId, catIdToCheck);
-            Assert.Equal(searchedCategory.Data.Name, modelForUpdate.Name);
-            Assert.Equal(searchedCategory.Data.ParentId, modelForUpdate.ParentId);
+            Assert.Equal(modelForUpdate.TransactionCategoryId, searchedCategory.Data.TransactionCategoryId);
+            Assert.Equal(modelForUpdate.Name, searchedCategory.Data.Name);
+            Assert.Equal(modelForUpdate.ParentId, searchedCategory.Data.ParentId);
         }
     }
 }
