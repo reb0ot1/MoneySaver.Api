@@ -39,6 +39,7 @@ namespace MoneySaver.Api
                     config.AddJsonFile("appsettings.json",
                     optional: true,
                     reloadOnChange: true);
+                    config.AddEnvironmentVariables();
                 })
             .ConfigureWebHostDefaults(webBuilder =>
             {
