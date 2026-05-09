@@ -72,7 +72,6 @@ namespace MoneySaver.Api.Services.Implementation
                         .Take(pageRequest.ItemsPerPage)
                         .ToListAsync();
 
-
                 result.Result = transactionsFoundResult;
                 result.TotalCount = totalRecords;
             }

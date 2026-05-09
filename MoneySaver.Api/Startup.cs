@@ -12,7 +12,11 @@ using MoneySaver.Api.Models;
 using MoneySaver.Api.Services.Contracts;
 using MoneySaver.Api.Services.Implementation;
 using MoneySaver.System.Infrastructure;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Serilog;
+using System;
 using System.IdentityModel.Tokens.Jwt;
 
 namespace MoneySaver.Api
@@ -52,6 +56,7 @@ namespace MoneySaver.Api
             services.AddScoped<IReportsService, ReportsService>();
             services.AddScoped<IAppConfigurationService, AppConfigurationService>();
             services.AddScoped<IDateProvider, DateProvider>();
+            services.AddSingleton<CustomMetrics>();
             services.AddCors(options =>
             {
                 //TODO: Change the CORS policy
@@ -60,6 +65,30 @@ namespace MoneySaver.Api
 
             services.AddControllers();
 
+            services.AddOpenTelemetry()
+                .ConfigureResource(resource => resource.AddService("Moneysaver.Api"))
+                .WithTracing(tracing =>
+                {
+                    tracing
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddSqlClientInstrumentation();
+
+                    tracing.AddOtlpExporter(options =>
+                    {
+                        //options.Endpoint = new Uri(Configuration["Otel:Endpoint"]);
+                    });
+                })
+                .WithMetrics(metrics =>
+                {
+                    metrics
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddRuntimeInstrumentation()
+                    .AddProcessInstrumentation()
+                    .AddMeter("MoneySaver.Api.Metrics")
+                    .AddPrometheusExporter();
+                });
             //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             //    .AddJwtBearer(options =>
             //    {
@@ -80,6 +109,9 @@ namespace MoneySaver.Api
             app.UseHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions { 
                 ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
             });
+
+            app.UseOpenTelemetryPrometheusScrapingEndpoint();
+            app.UseMiddleware<MoneySaver.Api.Middlewares.MetricsMiddleware>();
 
             //app.UseHttpsRedirection();
             app.UseRouting();
