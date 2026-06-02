@@ -1,103 +1,97 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using HealthChecks.UI.Client;
+using MoneySaver.Api;
+using MoneySaver.Api.Data;
+using MoneySaver.Api.Data.Repositories;
+using MoneySaver.Api.Middlewares;
+using MoneySaver.Api.Models;
+using MoneySaver.Api.Services.Contracts;
+using MoneySaver.Api.Services.Implementation;
+using MoneySaver.System.Infrastructure;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Serilog;
+using System.IdentityModel.Tokens.Jwt;
 
-namespace MoneySaver.Api
+var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
+builder.Services.AddWebService<MoneySaverApiContext>(builder.Configuration);
+builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<ITransactionCategoryService, TransactionCategoryService>();
+builder.Services.AddScoped<IBudgetService, BudgetService>();
+builder.Services.AddScoped<UserPackage>();
+builder.Services.AddScoped<IReportsService, ReportsService>();
+builder.Services.AddScoped<IAppConfigurationService, AppConfigurationService>();
+builder.Services.AddScoped<IDateProvider, DateProvider>();
+builder.Services.AddSingleton<CustomMetrics>();
+builder.Services.AddCors(options =>
 {
-    public class Program
+    //TODO: Change the CORS policy
+    options.AddPolicy("Open", b => b.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+});
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("Moneysaver.Api"))
+    .WithTracing(tracing =>
     {
-        public static void Main(string[] args)
-        {
-            var host = CreateHostBuilder(args).Build();
-            var config = host.Services.GetRequiredService<IConfiguration>();
-            try
-            {
-                host.Run();
-            }
-            catch (Exception ex)
-            {
-                Log.Fatal(ex, "The Application failed to start.");
-            }
-            finally
-            {
-                Log.CloseAndFlush();
-            }
+        tracing
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddSqlClientInstrumentation()
+            .AddOtlpExporter();
+    })
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddProcessInstrumentation()
+            .AddMeter("MoneySaver.Api.Metrics")
+            .AddPrometheusExporter();
+    });
 
-        }
+var app = builder.Build();
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration((hostingContext, config) =>
-                {
-                    config.AddJsonFile("appsettings.json",
-                    optional: true,
-                    reloadOnChange: true);
-                    config.AddEnvironmentVariables();
-                })
-            .ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.UseStartup<Startup>();
-            });
-    }
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
 }
 
-// using MoneySaver.Identity.Data;
-// using MoneySaver.System.Infrastructure;
-// using MoneySaver.System.Services;
-// using MoneySaver.Identity.Infrastructure;
-// using MoneySaver.Identity.Services.Identity;
-// using HealthChecks.UI.Client;
-// using Serilog;
-// using MoneySaver.Identity.Models.Configuration;
-//
-// var builder = WebApplication.CreateBuilder(args);
-// Log.Logger = new LoggerConfiguration()
-//     .ReadFrom.Configuration(builder.Configuration)
-//     .CreateLogger();
+app.UseCors("Open");
+app.UseHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
 
-// Add services to the container.
-// builder.Services.AddWebService<IdentityDbContext>(builder.Configuration);
-// builder.Services.Configure<UrlRoutesConfiguration>(builder.Configuration.GetSection(nameof(UrlRoutesConfiguration)));
-// builder.Services.AddLogging(logging =>
-// {
-//     logging.AddSerilog(dispose: true);
-// });
-// builder.Services.AddHttpClient();
-// builder.Services.AddUserStorage();
-// builder.Services.AddTransient<IDataSeeder, IdentityDataSeeder>();
-// builder.Services.AddTransient<IIdentityService, IdentityService>()
-//     .AddTransient<ITokenGeneratorService, TokenGeneratorService>();
-//
-// builder.Services.AddHealthChecks();
-//
-// builder.Services.AddControllers();
-// builder.Services.AddEndpointsApiExplorer();
-// builder.Services.AddSwaggerGen();
-// builder.Host.UseSerilog();
-//
-// var app = builder.Build();
-//
-// // Configure the HTTP request pipeline.
-// //if (app.Environment.IsDevelopment())
-// //{
-// //    app.UseSwagger();
-// //    app.UseSwaggerUI();
-// //}
-//
-// app.MapHealthChecks("/healthz", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions { 
-//     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-// });
-//
-// app.UseWebService(app.Environment)
-//     .Initialize();
-//
-// app.Run();
+app.UseOpenTelemetryPrometheusScrapingEndpoint();
+app.UseMiddleware<MetricsMiddleware>();
 
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseUserPackageMiddleware();
+app.MapControllers();
 
+try
+{
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "The Application failed to start.");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

@@ -5,7 +5,8 @@ WORKDIR /app
 # Copy everything
 COPY . ./
 # Restore as distinct layers
-RUN dotnet restore "MoneySaver.Api/MoneySaver.Api.csproj"
+ RUN --mount=type=secret,id=nuget_config,target=/root/.nuget/NuGet/NuGet.Config \
+     dotnet restore "MoneySaver.Api/MoneySaver.Api.csproj"
 # Build and publish a release
 RUN dotnet publish "MoneySaver.Api/MoneySaver.Api.csproj" -c Release -o out
 
