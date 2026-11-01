@@ -15,6 +15,16 @@ namespace MoneySaver.Api.Data
         public DbSet<BudgetItem> BudgetItems { get; set; }
         public DbSet<AppConfiguration> AppConfigurations { get; set; }
 
+        // Npgsql only accepts DateTime values with Kind=Utc for timestamptz columns, while the services build filter dates with Kind=Unspecified.
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            base.ConfigureConventions(configurationBuilder);
+            if (Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL")
+            {
+                configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();
+            }
+        }
+
         //protected override void OnModelCreating(ModelBuilder modelBuilder)
         //{
         //    base.OnModelCreating(modelBuilder);

@@ -1,3 +1,4 @@
+using Npgsql;
 using HealthChecks.UI.Client;
 using MoneySaver.Api;
 using MoneySaver.Api.Data;
@@ -48,6 +49,7 @@ builder.Services.AddOpenTelemetry()
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
             .AddSqlClientInstrumentation()
+            .AddNpgsql()
             .AddOtlpExporter();
     })
     .WithMetrics(metrics =>

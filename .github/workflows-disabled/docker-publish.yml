@@ -1,0 +1,83 @@
+name: Build and push image
+
+on:
+  push:
+    tags: ["v*"]
+
+env:
+  IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/moneysaver-api
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            platform: linux/amd64
+            dockerfile: Dockerfile
+          - arch: arm64
+            platform: linux/arm64
+            dockerfile: Dockerfile.arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Create shared NuGet config
+        run: |
+          cat > "$RUNNER_TEMP/NuGet.Config" <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="github" value="https://nuget.pkg.github.com/reb0ot1/index.json" />
+              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+            </packageSources>
+            <packageSourceCredentials>
+              <github>
+                <add key="Username" value="reb0ot1" />
+                <add key="ClearTextPassword" value="%GH_PACKAGES_TOKEN%" />
+              </github>
+            </packageSourceCredentials>
+          </configuration>
+          EOF
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          platforms: ${{ matrix.platform }}
+          push: true
+          provenance: false
+          tags: ${{ env.IMAGE }}:${{ env.VERSION }}-${{ matrix.arch }}
+          secret-files: |
+            nuget_config=${{ runner.temp }}/NuGet.Config
+          secrets: |
+            gh_token=${{ secrets.GH_PACKAGES_TOKEN }}
+
+  manifest:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Publish multi-arch tags
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          for TAG in "$VERSION" latest; do
+            docker buildx imagetools create -t "$IMAGE:$TAG" "$IMAGE:$VERSION-amd64" "$IMAGE:$VERSION-arm64"
+          done

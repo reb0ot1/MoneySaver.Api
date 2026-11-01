@@ -1,0 +1,14 @@
+# Build stage runs on the host's native architecture; only the runtime image is arm64.
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:9.0 AS build-env
+WORKDIR /app
+
+COPY . ./
+RUN --mount=type=secret,id=nuget_config,target=/root/.nuget/NuGet/NuGet.Config \
+    --mount=type=secret,id=gh_token,env=GH_PACKAGES_TOKEN \
+    dotnet restore "MoneySaver.Api/MoneySaver.Api.csproj" -a arm64
+RUN dotnet publish "MoneySaver.Api/MoneySaver.Api.csproj" -c Release -a arm64 -o out /p:UseAppHost=false
+
+FROM --platform=linux/arm64 mcr.microsoft.com/dotnet/aspnet:9.0
+WORKDIR /app
+COPY --from=build-env /app/out .
+ENTRYPOINT ["dotnet", "MoneySaver.Api.dll"]
